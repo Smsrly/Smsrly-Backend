@@ -1,17 +1,20 @@
 package com.example.smsrly.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-
-import java.util.HashSet;
-import java.util.Set;
+import lombok.Getter;
+import lombok.Setter;
+import java.util.List;
 
 @Entity
 @Table
+@Getter
+@Setter
 public class RealEstate {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private int id;
 
     @Column(nullable = false)
     private String title;
@@ -39,11 +42,19 @@ public class RealEstate {
     @Column(columnDefinition = "LONGTEXT")
     private String image;
 
+    @JsonIgnore
     @ManyToMany(mappedBy = "save", fetch = FetchType.LAZY)
-    private Set<User> save;
-
+    private List<User> save;
+    @JsonIgnore
     @OneToMany(mappedBy = "realEstate", cascade = CascadeType.ALL)
-    private Set<Request> realEstateRequest;
+    private List<Request> realEstateRequest;
 
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    private User user;
+
+    @JsonIgnore
+    private transient int userId;
 
 }

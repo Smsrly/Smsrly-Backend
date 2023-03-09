@@ -1,14 +1,19 @@
 package com.example.smsrly.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table
+@Getter
+@Setter
 public class Request {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private int id;
     @Column(name = "date_created", columnDefinition = "DATETIME", nullable = false)
     private LocalDateTime dateCreated;
 
@@ -20,21 +25,6 @@ public class Request {
     @JoinColumn(name = "real_estate_id")
     private RealEstate realEstate;
 
-    public RealEstate getRealEstate() {
-        return realEstate;
-    }
-
-    public void setRealEstate(RealEstate realEstate) {
-        this.realEstate = realEstate;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
 
 
 }
