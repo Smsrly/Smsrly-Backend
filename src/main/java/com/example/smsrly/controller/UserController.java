@@ -32,9 +32,9 @@ public class UserController {
                            @RequestParam(required = false) String lastName,
                            @RequestParam(required = false) String email,
                            @RequestParam(required = false) String password,
-                           @RequestParam(required = false) long phoneNumber,
-                           @RequestParam(required = false) double latitude,
-                           @RequestParam(required = false) double longitude,
+                           @RequestParam(required = false) Optional<Long> phoneNumber,
+                           @RequestParam(required = false) Optional<Double> latitude,
+                           @RequestParam(required = false) Optional<Double> longitude,
                            @RequestParam(required = false) String image) {
         service.updateUser(userId, firstName, lastName, email, password, phoneNumber, latitude, longitude, image);
     }

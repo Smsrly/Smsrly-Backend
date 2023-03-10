@@ -51,11 +51,6 @@ public class User implements UserDetails {
     @JsonIgnore
     private List<RealEstate> realEstate;
 
-    @OneToMany(targetEntity = Message.class, cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
-    @JsonIgnore
-    private List<Message> message;
-
     @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinTable(
             name = "save",
