@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table
@@ -45,12 +46,12 @@ public class User implements UserDetails {
 
     @Column(columnDefinition = "LONGTEXT")
     private String image;
-
-    @OneToMany(targetEntity = RealEstate.class, cascade = CascadeType.ALL)
-    @JoinColumn(name = "owner_id", referencedColumnName = "id")
     @JsonIgnore
-    private List<RealEstate> realEstate;
+    @OneToMany(targetEntity = RealEstate.class, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "owner_id", referencedColumnName = "id")
+    private List<RealEstate> uploads;
 
+    @JsonIgnore
     @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinTable(
             name = "save",
@@ -61,10 +62,11 @@ public class User implements UserDetails {
                     @JoinColumn(name = "real_estate_id", referencedColumnName = "id")
             }
     )
-    private List<RealEstate> save;
+    private Set<RealEstate> save;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Request> userRequest;
+    private Set<Request> userRequests;
 
 
     @JsonIgnore

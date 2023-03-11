@@ -1,15 +1,18 @@
 package com.example.smsrly.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import java.util.List;
+
+import java.util.Set;
 
 @Entity
 @Table
 @Getter
 @Setter
+@JsonIgnoreProperties({"hibernateLazyInitializer"})
 public class RealEstate {
 
     @Id
@@ -44,17 +47,15 @@ public class RealEstate {
 
     @JsonIgnore
     @ManyToMany(mappedBy = "save", fetch = FetchType.LAZY)
-    private List<User> save;
-    @JsonIgnore
-    @OneToMany(mappedBy = "realEstate", cascade = CascadeType.ALL)
-    private List<Request> realEstateRequest;
+    private Set<User> save;
 
     @JsonIgnore
+    @OneToMany(mappedBy = "realEstate", cascade = CascadeType.ALL)
+    private Set<Request> realEstateRequest;
+
     @ManyToOne
     @JoinColumn(name = "owner_id")
     private User user;
-
-    @JsonIgnore
     private transient int userId;
 
 }

@@ -1,6 +1,7 @@
 package com.example.smsrly.controller;
 
 import com.example.smsrly.entity.RealEstate;
+import com.example.smsrly.entity.Request;
 import com.example.smsrly.service.RealEstateService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -16,9 +17,9 @@ public class RealEstateController {
     private final RealEstateService service;
 
 
-    @GetMapping
-    public List<RealEstate> realEstates() {
-        return service.getRealEstates();
+    @GetMapping(path = "user/{userId}")
+    public List<RealEstate> realEstates(@PathVariable("userId") int userId) {
+        return service.getRealEstates(userId);
     }
 
 
@@ -31,6 +32,7 @@ public class RealEstateController {
     public void addRealEstate(@RequestBody RealEstate realEstate) {
         service.addRealEstate(realEstate);
     }
+
     @DeleteMapping(path = "{realEstateId}")
     public void deleteRealEstate(@PathVariable("realEstateId") int realEstateId) {
         service.deleteRealEstate(realEstateId);
@@ -38,17 +40,27 @@ public class RealEstateController {
 
     @PutMapping(path = "{realEstateId}")
     public void updateRealEstate(@PathVariable("realEstateId") int realEstateId,
-                           @RequestParam(required = false) String title,
-                           @RequestParam(required = false) String description,
-                           @RequestParam(required = false) double area,
-                           @RequestParam(required = false) int floorNumber,
-                           @RequestParam(required = false) int bathroomNumber,
-                           @RequestParam(required = false) int roomNumber,
-                           @RequestParam(required = false) double price,
-                           @RequestParam(required = false) double latitude,
-                           @RequestParam(required = false) double longitude,
-                           @RequestParam(required = false) String image) {
+                                 @RequestParam(required = false) String title,
+                                 @RequestParam(required = false) String description,
+                                 @RequestParam(required = false) Optional<Double> area,
+                                 @RequestParam(required = false) Optional<Integer> floorNumber,
+                                 @RequestParam(required = false) Optional<Integer> bathroomNumber,
+                                 @RequestParam(required = false) Optional<Integer> roomNumber,
+                                 @RequestParam(required = false) Optional<Double> price,
+                                 @RequestParam(required = false) Optional<Double> latitude,
+                                 @RequestParam(required = false) Optional<Double> longitude,
+                                 @RequestParam(required = false) String image) {
         service.updateRealEstate(realEstateId, title, description, area, floorNumber, bathroomNumber, roomNumber, price, latitude, longitude, image);
     }
 
+
+    @PostMapping(path = "/request")
+    public void setUserRequest(@RequestBody Request userRequest) {
+        service.addRequest(userRequest);
+    }
+
+    @GetMapping(path = "/requestedBy/{realEstateId}")
+    public List<Request> getRealEstateRequests(@PathVariable(value = "realEstateId") int realEstateId) {
+        return service.getRealEstateRequests(realEstateId);
+    }
 }

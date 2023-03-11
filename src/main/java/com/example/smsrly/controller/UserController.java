@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @RestController
 @RequestMapping(path = "/user")
@@ -39,9 +40,29 @@ public class UserController {
         service.updateUser(userId, firstName, lastName, email, password, phoneNumber, latitude, longitude, image);
     }
 
+    @GetMapping(path = "/saves/{userId}")
+    public Set<RealEstate> userSaves(@PathVariable("userId") int userId) {
+        return service.getUserSaves(userId);
+    }
 
-    @GetMapping(path = "/uploads/{userId}")
-    public List<RealEstate> userUploads(@PathVariable("userId") int userId) {
+    @PostMapping("/{userId}/save/{realEstateId}")
+    public void saveRealEstate(
+            @PathVariable("userId") int userId,
+            @PathVariable("realEstateId") int realEstateId
+    ) {
+        service.saveRealEstate(userId, realEstateId);
+    }
+
+    @DeleteMapping("/{userId}/save/{realEstateId}")
+    public void deleteSaveRealEstate(
+            @PathVariable("userId") int userId,
+            @PathVariable("realEstateId") int realEstateId
+    ) {
+        service.deleteSaveRealEstate(userId, realEstateId);
+    }
+
+    @GetMapping("/uploads/{userId}")
+    public List<RealEstate> getUserUploads(@PathVariable("userId") int userId) {
         return service.getUserUploads(userId);
     }
 }

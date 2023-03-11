@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 
 @Service
@@ -20,7 +21,6 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RealEstateRepository realEstateRepository;
-
     public void deleteUser(int userId) {
 
         if (!userRepository.existsById(userId)) {
@@ -96,7 +96,32 @@ public class UserService {
         return userRepository.findById(userId);
     }
 
+    public void saveRealEstate(int userId, int realEstateId) {
+        User user = userRepository.findById(userId).get();
+        RealEstate realEstate = realEstateRepository.findById(realEstateId).get();
+        Set<RealEstate> realEstateList = user.getSave();
+        realEstateList.add(realEstate);
+        user.setSave(realEstateList);
+        userRepository.save(user);
+    }
+
+    public void deleteSaveRealEstate(int userId, int realEstateId) {
+        User user = userRepository.findById(userId).get();
+        RealEstate realEstate = realEstateRepository.findById(realEstateId).get();
+        Set<RealEstate> realEstateList = user.getSave();
+        realEstateList.remove(realEstate);
+        user.setSave(realEstateList);
+        userRepository.save(user);
+    }
+
+    public Set<RealEstate> getUserSaves(int userId) {
+        User user = userRepository.findById(userId).get();
+        return user.getSave();
+    }
+
     public List<RealEstate> getUserUploads(int userId) {
-        return realEstateRepository.findUploadedRealEstateByUserId(userId);
+
+       return realEstateRepository.findUploadedRealEstateByUserId(userId);
+
     }
 }

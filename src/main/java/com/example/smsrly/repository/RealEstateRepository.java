@@ -1,7 +1,6 @@
 package com.example.smsrly.repository;
 
 import com.example.smsrly.entity.RealEstate;
-import com.example.smsrly.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -13,5 +12,8 @@ public interface RealEstateRepository extends JpaRepository<RealEstate, Integer>
 
     @Query(value = "SELECT * FROM real_estate WHERE owner_id = :userId", nativeQuery = true)
     List<RealEstate> findUploadedRealEstateByUserId(int userId);
+
+    @Query(value = "SELECT * FROM real_estate ORDER BY ((latitude - :userLatitude) * (latitude - :userLatitude)) + ((longitude - :userLongitude) * (longitude - :userLongitude)) ASC", nativeQuery = true)
+    List<RealEstate> getRealEstateNearestToUser(double userLatitude, double userLongitude);
 
 }

@@ -1,12 +1,17 @@
 package com.example.smsrly.service;
 
 import com.example.smsrly.entity.RealEstate;
+import com.example.smsrly.entity.Request;
+import com.example.smsrly.entity.User;
 import com.example.smsrly.repository.RealEstateRepository;
+import com.example.smsrly.repository.RequestRepository;
 import com.example.smsrly.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,28 +20,31 @@ import java.util.Optional;
 @AllArgsConstructor
 public class RealEstateService {
 
-    private final RealEstateRepository repository;
+    private final RealEstateRepository realEstateRepository;
     private final UserRepository userRepository;
+    private final RequestRepository requestRepository;
 
-    // need some updates
-    public List<RealEstate> getRealEstates() {
-        return repository.findAll();
+    public List<RealEstate> getRealEstates(int userId) {
+        double latitude = userRepository.findLatitudeById(userId);
+        double longitude = userRepository.findLongitudeById(userId);
+        return realEstateRepository.getRealEstateNearestToUser(latitude, longitude);
     }
 
     public Optional<RealEstate> getRealEstate(int realEstateId) {
-        return repository.findById(realEstateId);
+        return realEstateRepository.findById(realEstateId);
     }
 
     public void deleteRealEstate(int realEstateId) {
-        if (!repository.existsById(realEstateId)) {
+        if (!realEstateRepository.existsById(realEstateId)) {
             throw new IllegalStateException("realEstate with id " + realEstateId + " not exists");
         }
-        repository.deleteById(realEstateId);
+        realEstateRepository.deleteById(realEstateId);
     }
 
-    public void updateRealEstate(int realEstateId, String title, String description, double area, int floorNumber, int bathroomNumber, int roomNumber, double price, double latitude, double longitude, String image) {
+    @Transactional
+    public void updateRealEstate(int realEstateId, String title, String description, Optional<Double> area, Optional<Integer> floorNumber, Optional<Integer> bathroomNumber, Optional<Integer> roomNumber, Optional<Double> price, Optional<Double> latitude, Optional<Double> longitude, String image) {
 
-        RealEstate realEstate = repository.findById(realEstateId).orElseThrow(() ->
+        RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() ->
                 new IllegalStateException("realEstate with id " + realEstateId + " not exists")
         );
 
@@ -48,33 +56,53 @@ public class RealEstateService {
             realEstate.setDescription(description);
         }
 
-
-        if (area > 0 && !(area == realEstate.getArea())) {
-            realEstate.setArea(area);
+        if (area.isPresent()) {
+            double realEstateArea = Double.parseDouble(area.get().toString());
+            if (realEstateArea > 0 && !(realEstateArea == realEstate.getArea())) {
+                realEstate.setArea(realEstateArea);
+            }
         }
 
-        if (floorNumber > 0 && !(floorNumber == realEstate.getFloorNumber())) {
-            realEstate.setFloorNumber(floorNumber);
-        }
-        if (bathroomNumber > 0 && !(bathroomNumber == realEstate.getBathroomNumber())) {
-            realEstate.setBathroomNumber(bathroomNumber);
-        }
-
-        if (roomNumber > 0 && !(roomNumber == realEstate.getRoomNumber())) {
-            realEstate.setRoomNumber(roomNumber);
+        if (floorNumber.isPresent()) {
+            int realEstateFloorNumber = Integer.parseInt(floorNumber.get().toString());
+            if (realEstateFloorNumber > 0 && !(realEstateFloorNumber == realEstate.getFloorNumber())) {
+                realEstate.setFloorNumber(realEstateFloorNumber);
+            }
         }
 
-        if (price > 0 && !(price == realEstate.getPrice())) {
-            realEstate.setPrice(price);
+        if (bathroomNumber.isPresent()) {
+            int realEstateBathroomNumber = Integer.parseInt(bathroomNumber.get().toString());
+            if (realEstateBathroomNumber > 0 && !(realEstateBathroomNumber == realEstate.getBathroomNumber())) {
+                realEstate.setBathroomNumber(realEstateBathroomNumber);
+            }
         }
 
-        if (latitude > 0 && !(latitude == realEstate.getLatitude())) {
-            realEstate.setLatitude(latitude);
+        if (roomNumber.isPresent()) {
+            int realEstateRoomNumber = Integer.parseInt(roomNumber.get().toString());
+            if (realEstateRoomNumber > 0 && !(realEstateRoomNumber == realEstate.getRoomNumber())) {
+                realEstate.setRoomNumber(realEstateRoomNumber);
+            }
         }
 
+        if (price.isPresent()) {
+            double realEstatePrice = Double.parseDouble(price.get().toString());
+            if (realEstatePrice > 0 && !(realEstatePrice == realEstate.getPrice())) {
+                realEstate.setPrice(realEstatePrice);
+            }
+        }
 
-        if (longitude > 0 && !(longitude == realEstate.getLongitude())) {
-            realEstate.setLongitude(longitude);
+        if (latitude.isPresent()) {
+            double realEstateLatitude = Double.parseDouble(latitude.get().toString());
+            if (realEstateLatitude > 0 && !(realEstateLatitude == realEstate.getLatitude())) {
+                realEstate.setLatitude(realEstateLatitude);
+            }
+        }
+
+        if (longitude.isPresent()) {
+            double realEstateLongitude = Double.parseDouble(longitude.get().toString());
+            if (realEstateLongitude > 0 && !(realEstateLongitude == realEstate.getLongitude())) {
+                realEstate.setLongitude(realEstateLongitude);
+            }
         }
 
         if (image != null && image.length() > 0 && !image.equals(realEstate.getImage())) {
@@ -87,7 +115,28 @@ public class RealEstateService {
 
         realEstate.setUser(userRepository.findById(realEstate.getUserId()).orElseThrow(() -> new ResourceNotFoundException("userId not found: " + realEstate.getUserId())));
         realEstate.setUserId(realEstate.getUserId());
-        repository.save(realEstate);
+        realEstateRepository.save(realEstate);
 
+    }
+
+    public void addRequest(Request userRequest) {
+
+        if (requestRepository.findRequest(userRequest.getRealEstateId(), userRequest.getUserId()).isPresent()) {
+            throw new IllegalStateException("Request already added");
+        }
+
+        userRequest.setUser(userRepository.findById(userRequest.getUserId()).orElseThrow(() -> new ResourceNotFoundException("userId not found: " + userRequest.getUserId())));
+        userRequest.setUserId(userRequest.getId());
+
+        userRequest.setRealEstate(realEstateRepository.findById(userRequest.getRealEstateId()).orElseThrow(() -> new ResourceNotFoundException("realEstateId not found: " + userRequest.getRealEstateId())));
+        userRequest.setRealEstateId(userRequest.getId());
+
+        userRequest.setDateCreated(LocalDateTime.now());
+
+        requestRepository.save(userRequest);
+    }
+
+    public List<Request> getRealEstateRequests(int realEstateId) {
+        return requestRepository.getRequestsByRealEstateId(realEstateId);
     }
 }
