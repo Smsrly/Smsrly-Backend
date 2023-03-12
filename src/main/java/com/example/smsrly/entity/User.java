@@ -46,6 +46,7 @@ public class User implements UserDetails {
 
     @Column(columnDefinition = "LONGTEXT")
     private String image;
+    private Boolean enable;
     @JsonIgnore
     @OneToMany(targetEntity = RealEstate.class, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "owner_id", referencedColumnName = "id")
@@ -67,7 +68,9 @@ public class User implements UserDetails {
     @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<Request> userRequests;
-
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<ConfirmationCode> confirmationCodeList;
 
     @JsonIgnore
     @Override
@@ -102,6 +105,6 @@ public class User implements UserDetails {
     @JsonIgnore
     @Override
     public boolean isEnabled() {
-        return true;
+        return enable;
     }
 }

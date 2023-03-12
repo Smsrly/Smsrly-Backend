@@ -12,5 +12,6 @@ import lombok.NoArgsConstructor;
 public class AuthenticationResponse {
     private String token;
     private int id;
+    private String massage;
 
 }
