@@ -16,7 +16,7 @@ public class ConfirmationCode {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     @Column(nullable = false)
-    private String verificationCode;
+    private int verificationCode;
     @Column(nullable = false)
     private LocalDateTime createdAt;
     @Column(nullable = false)
@@ -30,7 +30,7 @@ public class ConfirmationCode {
     public ConfirmationCode() {
     }
 
-    public ConfirmationCode(String verificationCode, LocalDateTime createdAt, LocalDateTime expiredAt, User user) {
+    public ConfirmationCode(int verificationCode, LocalDateTime createdAt, LocalDateTime expiredAt, User user) {
         this.verificationCode = verificationCode;
         this.createdAt = createdAt;
         this.expiredAt = expiredAt;

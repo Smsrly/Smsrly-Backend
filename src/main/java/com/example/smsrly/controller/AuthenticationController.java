@@ -17,8 +17,8 @@ public class AuthenticationController {
     private final AuthenticationService service;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthenticationResponse> register(@RequestBody RegisterRequest request) {
-        return ResponseEntity.ok(service.register(request));
+    public String register(@RequestBody RegisterRequest request) {
+        return service.register(request);
     }
 
     @PostMapping("/authenticate")
@@ -27,8 +27,7 @@ public class AuthenticationController {
     }
 
     @GetMapping(path = "confirm")
-    public String confirm(@RequestParam("code") String code) {
-
+    public AuthenticationResponse confirm(@RequestParam("code") String code) {
         return service.confirmCode(code);
     }
 
