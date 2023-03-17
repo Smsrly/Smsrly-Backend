@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Table
 @Getter
 @Setter
-public class ConfirmationCode {
+public class VerificationEmailCode {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,14 +23,14 @@ public class ConfirmationCode {
     private LocalDateTime expiredAt;
     private LocalDateTime confirmedAt;
 
-    @ManyToOne
+    @ManyToOne()
     @JoinColumn(name = "user_id")
     private User user;
 
-    public ConfirmationCode() {
+    public VerificationEmailCode() {
     }
 
-    public ConfirmationCode(int verificationCode, LocalDateTime createdAt, LocalDateTime expiredAt, User user) {
+    public VerificationEmailCode(int verificationCode, LocalDateTime createdAt, LocalDateTime expiredAt, User user) {
         this.verificationCode = verificationCode;
         this.createdAt = createdAt;
         this.expiredAt = expiredAt;

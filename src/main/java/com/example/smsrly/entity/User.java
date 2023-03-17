@@ -70,7 +70,10 @@ public class User implements UserDetails {
     private Set<Request> userRequests;
     @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<ConfirmationCode> confirmationCodeList;
+    private List<VerificationEmailCode> verificationEmailCodeList;
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<ResetPasswordCode> resetPasswordCodeList;
 
     @JsonIgnore
     @Override

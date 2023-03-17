@@ -4,16 +4,12 @@ import com.example.smsrly.config.JwtService;
 import com.example.smsrly.auth.AuthenticationRequest;
 import com.example.smsrly.auth.AuthenticationResponse;
 import com.example.smsrly.auth.RegisterRequest;
-import com.example.smsrly.entity.ConfirmationCode;
+import com.example.smsrly.entity.ResetPasswordCode;
+import com.example.smsrly.entity.VerificationEmailCode;
 import com.example.smsrly.entity.User;
 import com.example.smsrly.repository.UserRepository;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMailMessage;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import lombok.*;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,26 +22,47 @@ import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
-public class AuthenticationService extends SimpleMailMessage {
-    private final UserRepository repository;
+public class AuthenticationService {
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    private final ConfirmationCodeService confirmationCodeService;
-    private final JavaMailSender mailSender;
+    private final VerificationEmailCodeService verificationEmailCodeService;
+    private final ResetPasswordService resetPasswordService;
+    private final UserService userService;
+    private final EmailServices emailServices;
 
-    private String token;
-    private int id;
+
+    public int generateCode() {
+        Random random = new Random();
+        int code = 0;
+        while (code < 1000) {
+            code = random.nextInt(10000);
+        }
+        return code;
+    }
 
 
     public String register(RegisterRequest request) {
 
         int generatedCode = generateCode();
-        Optional<User> userEmail = repository.findUserByEmail(request.getEmail());
-        Optional<User> userPhoneNumber = repository.findUserByPhoneNumber(request.getPhoneNumber());
 
-        if (userEmail.isPresent() || userPhoneNumber.isPresent()) {
-            throw new IllegalStateException("email or phone number is already inserted into DB");
+        Optional<User> userEmail = userRepository.findUserByEmail(request.getEmail());
+
+        if (userEmail.isPresent() && userEmail.get().isEnabled()) {
+            throw new IllegalStateException("email is already inserted into DB");
+        } else if (userEmail.isPresent() && !userEmail.get().isEnabled()) {
+
+            userService.updateUser(userEmail.get().getId(),
+                    request.getFirstname(),
+                    request.getLastname(),
+                    null,
+                    request.getPassword(),
+                    Optional.of(request.getPhoneNumber()),
+                    Optional.of(request.getLatitude()),
+                    Optional.of(request.getLongitude()),
+                    request.getImage());
+            return emailServices.sendEmail(userEmail.get(), generatedCode, "confirmationEmail");
         }
 
         var user = User.builder()
@@ -59,64 +76,14 @@ public class AuthenticationService extends SimpleMailMessage {
                 .image(request.getImage())
                 .enable(false)
                 .build();
-        repository.save(user);
-        var jwtToken = jwtService.generateToken(user);
+        userRepository.save(user);
 
-        ConfirmationCode confirmationCode = new ConfirmationCode(
-                generatedCode,
-                LocalDateTime.now(),
-                LocalDateTime.now().plusMinutes(15),
-                user);
-        confirmationCodeService.saveVerificationCode(confirmationCode);
-        token = jwtToken;
-        id = user.getId();
-
-        try {
-
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper messageTemplate =
-                    new MimeMessageHelper(message, "utf-8");
-            messageTemplate.setText(emailTemplate(user.getFirstName() +" "+ user.getLastName(), generatedCode), true);
-            messageTemplate.setTo(user.getEmail());
-            messageTemplate.setSubject("Confirm your email");
-            messageTemplate.setFrom("smsrly2023@gmail.com");
-            mailSender.send(message);
-        } catch (MessagingException e) {
-            return "failed to send email, " + e;
-        }
-        return "verification email sent";
-    }
-
-    private int generateCode() {
-        Random random = new Random();
-        int code = 0 ;
-        while (code < 1000) {
-            code = random.nextInt(10000);
-        }
-        return code;
-    }
-
-
-    private String emailTemplate(String userName, int code) {
-        return "<body style=\"background-color: #f6f6f6;\">\n" +
-                "    <div\n" +
-                "        style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px;\">\n" +
-                "        <h1 style=\"color: #3f51b5;\">Verification Code</h1>\n" +
-                "        <p style=\"color: #4d4d4d;\">Dear " + userName + ",</p>\n" +
-                "        <p style=\"color: #4d4d4d;\">Please use the following verification code to verify your email address:</p>\n" +
-                "        <p style=\"font-size: 24px; font-weight: bold; color: #3f51b5;\">" + code + "</p>\n" +
-                "        <p style=\"color: #4d4d4d;\">This code will expire after 15 minutes. Please use it as soon as possible.</p>\n" +
-                "        <p style=\"color: #4d4d4d;\">If you did not request this verification code, please ignore this email.</p>\n" +
-                "        <p style=\"color: #4d4d4d;\">Thank you for using our service!</p>\n" +
-                "        <p style=\"color: #4d4d4d;\">Best regards,</p>\n" +
-                "        <p style=\"color: #3f51b5; font-weight: bold;\">Smsrly Team</p>\n" +
-                "    </div>\n" +
-                "</body>";
+        return emailServices.sendEmail(user, generatedCode, "confirmationEmail");
     }
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
 
-        Optional<User> userEmail = repository.findUserByEmail(request.getEmail());
+        Optional<User> userEmail = userRepository.findUserByEmail(request.getEmail());
 
         if (userEmail.isEmpty()) {
             throw new IllegalStateException("email not found in DB");
@@ -128,39 +95,89 @@ public class AuthenticationService extends SimpleMailMessage {
                         request.getPassword()
                 )
         );
-        var user = repository.findUserByEmail(request.getEmail())
+        var user = userRepository.findUserByEmail(request.getEmail())
                 .orElseThrow();
         var jwtToken = jwtService.generateToken(user);
         return AuthenticationResponse.builder()
                 .token(jwtToken)
-                .id(repository.findIdByEmail(request.getEmail()))
+                .id(userRepository.findIdByEmail(request.getEmail()))
                 .build();
     }
 
     @Transactional
-    public AuthenticationResponse confirmCode(String code) {
-        ConfirmationCode confirmationCode = confirmationCodeService
+    public AuthenticationResponse emailConfirmationCode(String code) {
+        VerificationEmailCode verificationEmailCode = verificationEmailCodeService
                 .getCode(code)
                 .orElseThrow(() ->
                         new IllegalStateException("code not found"));
 
-        if (confirmationCode.getConfirmedAt() != null) {
+        if (verificationEmailCode.getConfirmedAt() != null) {
             throw new IllegalStateException("email already confirmed");
         }
 
-        LocalDateTime expiredAt = confirmationCode.getExpiredAt();
+        LocalDateTime expiredAt = verificationEmailCode.getExpiredAt();
 
         if (expiredAt.isBefore(LocalDateTime.now())) {
             throw new IllegalStateException("code expired");
         }
 
-        confirmationCodeService.setConfirmedAt(code);
-        repository.enableUser(confirmationCode.getUser().getEmail());
+        verificationEmailCodeService.setConfirmedAt(code);
+        userRepository.enableUser(verificationEmailCode.getUser().getEmail());
+
+
+        int userId = verificationEmailCodeService.getUserByVerificationEmailCode(Integer.parseInt(code));
+        Optional<User> getUser = userRepository.findById(userId);
+
+        verificationEmailCodeService.expireAllRequestsCode(getUser.get().getId());
+
         return AuthenticationResponse.builder()
-                .token(token)
-                .id(id)
+                .token(jwtService.generateToken(getUser.get()))
+                .id(getUser.get().getId())
                 .build();
     }
 
+    @Transactional
+    public ResponseEntity<String> passwordConfirmationCode(String code) {
+        ResetPasswordCode resetPasswordCode = resetPasswordService
+                .getCode(code)
+                .orElseThrow(() ->
+                        new IllegalStateException("code not found"));
+
+        if (resetPasswordCode.getExpired()) {
+            return ResponseEntity.ok("code is expired");
+            //throw new IllegalStateException("code is expired");
+        }
+        resetPasswordService.setExpired(code);
+
+        int userId = resetPasswordService.getUserByResetPasswordCode(Integer.parseInt(code));
+        Optional<User> getUser = userRepository.findById(userId);
+
+        resetPasswordService.expireAllRequestsCode(getUser.get().getId());
+        return ResponseEntity.ok("id: " + getUser.get().getId());
+    }
+
+
+    public String resetPassword(String userEmail) {
+        int generatedCode = generateCode();
+        Optional<User> user = userRepository.findUserByEmail(userEmail);
+        if (user.isEmpty()) {
+            return "email not exists in database";
+        }
+
+        return emailServices.sendEmail(user.get(), generatedCode, "resetPassword");
+    }
+
+
+    @Transactional
+    public AuthenticationResponse updateUserPassword(int userId, String password) {
+        User user = userRepository.findById(userId).orElseThrow(() ->
+                new IllegalStateException("user with id " + userId + " not exists")
+        );
+        user.setPassword(passwordEncoder.encode(password));
+        return AuthenticationResponse.builder()
+                .token(jwtService.generateToken(user))
+                .id(userId)
+                .build();
+    }
 
 }

@@ -21,6 +21,11 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RealEstateRepository realEstateRepository;
+
+    public Optional<User> getUser(int userId) {
+        return userRepository.findById(userId);
+    }
+
     public void deleteUser(int userId) {
 
         if (!userRepository.existsById(userId)) {
@@ -47,10 +52,9 @@ public class UserService {
 
         if (email != null && email.length() > 0 && !email.equals(user.getEmail())) {
             Optional<User> userEmail = userRepository.findUserByEmail(email);
-            if (userEmail.isPresent()) {
-                throw new IllegalStateException("email is already inserted into DB");
+            if (userEmail.isPresent() && userEmail.get().isEnabled()) {
+                throw new IllegalStateException("email is already inserted into DB from another user");
             }
-
             user.setEmail(email);
         }
 
@@ -60,13 +64,8 @@ public class UserService {
 
         if (phoneNumber.isPresent()) {
             long phoneNum = Long.parseLong(phoneNumber.get().toString());
-            Optional<User> userPhoneNumber = userRepository.findUserByPhoneNumber(phoneNum);
 
-            if (userPhoneNumber.isPresent()) {
-                throw new IllegalStateException("phone number is already inserted into DB from another user");
-            }
-
-            if (phoneNum > 9999 && !(phoneNum == user.getPhoneNumber())) {
+            if (phoneNum > 9999 && phoneNum != user.getPhoneNumber()) {
                 user.setPhoneNumber(phoneNum);
             }
         }
@@ -90,10 +89,6 @@ public class UserService {
         }
 
 
-    }
-
-    public Optional<User> getUser(int userId) {
-        return userRepository.findById(userId);
     }
 
     public void saveRealEstate(int userId, int realEstateId) {
@@ -121,7 +116,7 @@ public class UserService {
 
     public List<RealEstate> getUserUploads(int userId) {
 
-       return realEstateRepository.findUploadedRealEstateByUserId(userId);
+        return realEstateRepository.findUploadedRealEstateByUserId(userId);
 
     }
 }

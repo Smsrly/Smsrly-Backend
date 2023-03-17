@@ -14,21 +14,38 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthenticationController {
 
-    private final AuthenticationService service;
+    private final AuthenticationService authenticationService;
 
     @PostMapping("/register")
     public String register(@RequestBody RegisterRequest request) {
-        return service.register(request);
+        return authenticationService.register(request);
     }
 
     @PostMapping("/authenticate")
     public ResponseEntity<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request) {
-        return ResponseEntity.ok(service.authenticate(request));
+        return ResponseEntity.ok(authenticationService.authenticate(request));
     }
 
-    @GetMapping(path = "confirm")
-    public AuthenticationResponse confirm(@RequestParam("code") String code) {
-        return service.confirmCode(code);
+    @GetMapping(path = "/confirmEmail")
+    public AuthenticationResponse confirmEmail(@RequestParam("code") String code) {
+        return authenticationService.emailConfirmationCode(code);
     }
+
+    @GetMapping(path = "/resetPassword")
+    public String resetPassword(@RequestParam("email") String userEmail) {
+        return authenticationService.resetPassword(userEmail);
+    }
+
+    @GetMapping(path = "/confirmPassword")
+    public ResponseEntity<String> confirmPassword(@RequestParam("code") String code) {
+        return authenticationService.passwordConfirmationCode(code);
+    }
+
+    @PutMapping(path = "newPassword/{userId}")
+    public AuthenticationResponse updateUserPassword(@PathVariable("userId") int userId,
+                                                     @RequestParam("password") String password) {
+        return authenticationService.updateUserPassword(userId, password);
+    }
+
 
 }
