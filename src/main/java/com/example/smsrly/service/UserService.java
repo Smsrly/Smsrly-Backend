@@ -35,7 +35,7 @@ public class UserService {
     }
 
     @Transactional
-    public void updateUser(int userId, String firstName, String lastName, String email, String password, Optional<Long> phoneNumber, Optional<Double> latitude, Optional<Double> longitude, String image) {
+    public void updateUser(int userId, String firstName, String lastName, String password, Optional<Long> phoneNumber, Optional<Double> latitude, Optional<Double> longitude, String image) {
 
 
         User user = userRepository.findById(userId).orElseThrow(() ->
@@ -50,13 +50,13 @@ public class UserService {
             user.setLastName(lastName);
         }
 
-        if (email != null && email.length() > 0 && !email.equals(user.getEmail())) {
-            Optional<User> userEmail = userRepository.findUserByEmail(email);
-            if (userEmail.isPresent() && userEmail.get().isEnabled()) {
-                throw new IllegalStateException("email is already inserted into DB from another user");
-            }
-            user.setEmail(email);
-        }
+//        if (email != null && email.length() > 0 && !email.equals(user.getEmail())) {
+//            Optional<User> userEmail = userRepository.findUserByEmail(email);
+//            if (userEmail.isPresent()) {
+//                throw new IllegalStateException("email is already inserted into DB from another user");
+//            }
+//            user.setEmail(email);
+//        }
 
         if (password != null && password.length() > 0 && !passwordEncoder.matches(password, user.getPassword())) {
             user.setPassword(passwordEncoder.encode(password));
@@ -87,7 +87,6 @@ public class UserService {
         if (image != null && image.length() > 0 && !image.equals(user.getImage())) {
             user.setImage(image);
         }
-
 
     }
 

@@ -56,7 +56,6 @@ public class AuthenticationService {
             userService.updateUser(userEmail.get().getId(),
                     request.getFirstname(),
                     request.getLastname(),
-                    null,
                     request.getPassword(),
                     Optional.of(request.getPhoneNumber()),
                     Optional.of(request.getLatitude()),

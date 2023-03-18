@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -18,7 +17,6 @@ public class Request {
     private int id;
     @Column(name = "date_created", columnDefinition = "DATETIME", nullable = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @CreationTimestamp
     private LocalDateTime dateCreated;
 
     @ManyToOne
@@ -29,7 +27,7 @@ public class Request {
     @ManyToOne
     @JoinColumn(name = "real_estate_id")
     private RealEstate realEstate;
-     private transient int realEstateId;
+    private transient int realEstateId;
 
 
 }

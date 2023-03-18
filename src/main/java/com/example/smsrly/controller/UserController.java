@@ -31,13 +31,12 @@ public class UserController {
     public void updateUser(@PathVariable("userId") int userId,
                            @RequestParam(required = false) String firstName,
                            @RequestParam(required = false) String lastName,
-                           @RequestParam(required = false) String email,
                            @RequestParam(required = false) String password,
                            @RequestParam(required = false) Optional<Long> phoneNumber,
                            @RequestParam(required = false) Optional<Double> latitude,
                            @RequestParam(required = false) Optional<Double> longitude,
                            @RequestParam(required = false) String image) {
-        service.updateUser(userId, firstName, lastName, email, password, phoneNumber, latitude, longitude, image);
+        service.updateUser(userId, firstName, lastName, password, phoneNumber, latitude, longitude, image);
     }
 
     @GetMapping(path = "/saves/{userId}")

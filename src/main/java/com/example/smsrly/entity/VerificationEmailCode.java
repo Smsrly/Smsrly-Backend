@@ -17,10 +17,11 @@ public class VerificationEmailCode {
     private int id;
     @Column(nullable = false)
     private int verificationCode;
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "DATETIME")
     private LocalDateTime createdAt;
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "DATETIME")
     private LocalDateTime expiredAt;
+    @Column(columnDefinition = "DATETIME")
     private LocalDateTime confirmedAt;
 
     @ManyToOne()

@@ -50,7 +50,7 @@ public class EmailServices extends SimpleMailMessage {
                     confirmationEmailTemplate(user.getFirstName() + " " + user.getLastName(), generatedCode) :
                     resetPasswordTemplate(user.getFirstName() + " " + user.getLastName(), generatedCode), true);
             messageTemplate.setTo(user.getEmail());
-            messageTemplate.setSubject("Confirm your email");
+            messageTemplate.setSubject(type.equals("confirmationEmail") ? "Confirm your email" : "Reset your password");
             messageTemplate.setFrom("smsrly2023@gmail.com");
             mailSender.send(message);
 
