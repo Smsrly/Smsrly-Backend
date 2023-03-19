@@ -17,18 +17,18 @@ public class UserController {
 
     private final UserService service;
 
-    @GetMapping(path = "{userId}")
-    public Optional<User> user(@PathVariable("userId") int userId) {
-        return service.getUser(userId);
+    @GetMapping
+    public User user(@RequestHeader("Authorization") String authHeader) {
+        return service.getUser(authHeader);
     }
 
-    @DeleteMapping(path = "{userId}")
-    public void deleteUser(@PathVariable("userId") int userId) {
-        service.deleteUser(userId);
+    @DeleteMapping
+    public void deleteUser(@RequestHeader("Authorization") String authHeader) {
+        service.deleteUser(authHeader);
     }
 
-    @PutMapping(path = "{userId}")
-    public void updateUser(@PathVariable("userId") int userId,
+    @PutMapping
+    public void updateUser(@RequestHeader("Authorization") String authHeader,
                            @RequestParam(required = false) String firstName,
                            @RequestParam(required = false) String lastName,
                            @RequestParam(required = false) String password,
@@ -36,32 +36,32 @@ public class UserController {
                            @RequestParam(required = false) Optional<Double> latitude,
                            @RequestParam(required = false) Optional<Double> longitude,
                            @RequestParam(required = false) String image) {
-        service.updateUser(userId, firstName, lastName, password, phoneNumber, latitude, longitude, image);
+        service.updateUser(authHeader, firstName, lastName, password, phoneNumber, latitude, longitude, image);
     }
 
-    @GetMapping(path = "/saves/{userId}")
-    public Set<RealEstate> userSaves(@PathVariable("userId") int userId) {
-        return service.getUserSaves(userId);
+    @GetMapping(path = "/saves")
+    public Set<RealEstate> userSaves(@RequestHeader("Authorization") String authHeader) {
+        return service.getUserSaves(authHeader);
     }
 
-    @PostMapping("/{userId}/save/{realEstateId}")
+    @PostMapping("/save/{realEstateId}")
     public void saveRealEstate(
-            @PathVariable("userId") int userId,
+            @RequestHeader("Authorization") String authHeader,
             @PathVariable("realEstateId") int realEstateId
     ) {
-        service.saveRealEstate(userId, realEstateId);
+        service.saveRealEstate(authHeader, realEstateId);
     }
 
-    @DeleteMapping("/{userId}/save/{realEstateId}")
+    @DeleteMapping("/save/{realEstateId}")
     public void deleteSaveRealEstate(
-            @PathVariable("userId") int userId,
+            @RequestHeader("Authorization") String authHeader,
             @PathVariable("realEstateId") int realEstateId
     ) {
-        service.deleteSaveRealEstate(userId, realEstateId);
+        service.deleteSaveRealEstate(authHeader, realEstateId);
     }
 
-    @GetMapping("/uploads/{userId}")
-    public List<RealEstate> getUserUploads(@PathVariable("userId") int userId) {
-        return service.getUserUploads(userId);
+    @GetMapping("/uploads")
+    public List<RealEstate> getUserUploads(@RequestHeader("Authorization") String authHeader) {
+        return service.getUserUploads(authHeader);
     }
 }

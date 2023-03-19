@@ -9,7 +9,6 @@ import com.example.smsrly.entity.VerificationEmailCode;
 import com.example.smsrly.entity.User;
 import com.example.smsrly.repository.UserRepository;
 import lombok.*;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -53,7 +52,7 @@ public class AuthenticationService {
             throw new IllegalStateException("email is already inserted into DB");
         } else if (userEmail.isPresent() && !userEmail.get().isEnabled()) {
 
-            userService.updateUser(userEmail.get().getId(),
+            userService.updateUser(userEmail.get().getEmail(),
                     request.getFirstname(),
                     request.getLastname(),
                     request.getPassword(),
@@ -99,12 +98,11 @@ public class AuthenticationService {
         var jwtToken = jwtService.generateToken(user);
         return AuthenticationResponse.builder()
                 .token(jwtToken)
-                .id(userRepository.findIdByEmail(request.getEmail()))
                 .build();
     }
 
     @Transactional
-    public AuthenticationResponse emailConfirmationCode(String code) {
+    public AuthenticationResponse emailConfirmationCode(int code) {
         VerificationEmailCode verificationEmailCode = verificationEmailCodeService
                 .getCode(code)
                 .orElseThrow(() ->
@@ -124,35 +122,35 @@ public class AuthenticationService {
         userRepository.enableUser(verificationEmailCode.getUser().getEmail());
 
 
-        int userId = verificationEmailCodeService.getUserByVerificationEmailCode(Integer.parseInt(code));
-        Optional<User> getUser = userRepository.findById(userId);
+        int userId = verificationEmailCodeService.getUserByVerificationEmailCode(code);
+        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalStateException("user with id " + userId + " not exists"));
 
-        verificationEmailCodeService.expireAllRequestsCode(getUser.get().getId());
+        verificationEmailCodeService.expireAllRequestsCode(user.getId());
 
         return AuthenticationResponse.builder()
-                .token(jwtService.generateToken(getUser.get()))
-                .id(getUser.get().getId())
+                .token(jwtService.generateToken(user))
                 .build();
     }
 
     @Transactional
-    public ResponseEntity<String> passwordConfirmationCode(String code) {
+    public AuthenticationResponse passwordConfirmationCode(int code) {
         ResetPasswordCode resetPasswordCode = resetPasswordService
                 .getCode(code)
                 .orElseThrow(() ->
                         new IllegalStateException("code not found"));
 
         if (resetPasswordCode.getExpired()) {
-            return ResponseEntity.ok("code is expired");
-            //throw new IllegalStateException("code is expired");
+            throw new IllegalStateException("code is expired");
         }
         resetPasswordService.setExpired(code);
 
-        int userId = resetPasswordService.getUserByResetPasswordCode(Integer.parseInt(code));
-        Optional<User> getUser = userRepository.findById(userId);
+        int userId = resetPasswordService.getUserByResetPasswordCode(code);
+        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalStateException("user with id " + userId + " not exists"));
 
-        resetPasswordService.expireAllRequestsCode(getUser.get().getId());
-        return ResponseEntity.ok("id: " + getUser.get().getId());
+        resetPasswordService.expireAllRequestsCode(user.getId());
+        return AuthenticationResponse.builder()
+                .token(jwtService.generateToken(user))
+                .build();
     }
 
 
@@ -168,15 +166,10 @@ public class AuthenticationService {
 
 
     @Transactional
-    public AuthenticationResponse updateUserPassword(int userId, String password) {
-        User user = userRepository.findById(userId).orElseThrow(() ->
-                new IllegalStateException("user with id " + userId + " not exists")
-        );
+    public String updateUserPassword(String authHeader, String password) {
+        User user = userService.getUser(authHeader);
         user.setPassword(passwordEncoder.encode(password));
-        return AuthenticationResponse.builder()
-                .token(jwtService.generateToken(user))
-                .id(userId)
-                .build();
+        return "password updated";
     }
 
 }

@@ -27,7 +27,7 @@ public class AuthenticationController {
     }
 
     @GetMapping(path = "/confirmEmail")
-    public AuthenticationResponse confirmEmail(@RequestParam("code") String code) {
+    public AuthenticationResponse confirmEmail(@RequestParam("code") int code) {
         return authenticationService.emailConfirmationCode(code);
     }
 
@@ -37,14 +37,14 @@ public class AuthenticationController {
     }
 
     @GetMapping(path = "/confirmPassword")
-    public ResponseEntity<String> confirmPassword(@RequestParam("code") String code) {
+    public AuthenticationResponse confirmPassword(@RequestParam("code") int code) {
         return authenticationService.passwordConfirmationCode(code);
     }
 
-    @PutMapping(path = "newPassword/{userId}")
-    public AuthenticationResponse updateUserPassword(@PathVariable("userId") int userId,
-                                                     @RequestParam("password") String password) {
-        return authenticationService.updateUserPassword(userId, password);
+    @PutMapping(path = "/newPassword")
+    public String updateUserPassword(@RequestHeader("Authorization") String authHeader,
+                                     @RequestParam("password") String password) {
+        return authenticationService.updateUserPassword(authHeader, password);
     }
 
 

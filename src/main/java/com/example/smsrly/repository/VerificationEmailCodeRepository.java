@@ -13,12 +13,12 @@ import java.util.Optional;
 @Repository
 public interface VerificationEmailCodeRepository extends JpaRepository<VerificationEmailCode, Integer> {
     @Query(value = "SELECT * FROM verification_email_code where verification_code = :verificationCode", nativeQuery = true)
-    Optional<VerificationEmailCode> findByCode(String verificationCode);
+    Optional<VerificationEmailCode> findByCode(int verificationCode);
 
     @Transactional
     @Modifying
     @Query(value = "UPDATE verification_email_code SET confirmed_at = :confirmedAt WHERE verification_code = :code", nativeQuery = true)
-    void updateConfirmedAt(String code, LocalDateTime confirmedAt);
+    void updateConfirmedAt(int code, LocalDateTime confirmedAt);
 
     @Transactional
     @Modifying

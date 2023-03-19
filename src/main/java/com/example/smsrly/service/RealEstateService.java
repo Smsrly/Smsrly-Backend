@@ -23,8 +23,11 @@ public class RealEstateService {
     private final RealEstateRepository realEstateRepository;
     private final UserRepository userRepository;
     private final RequestRepository requestRepository;
+    private final UserService userService;
 
-    public List<RealEstate> getRealEstates(int userId) {
+    public List<RealEstate> getRealEstates(String authHeader) {
+
+        int userId = userService.getUserId(authHeader);
         double latitude = userRepository.findLatitudeById(userId);
         double longitude = userRepository.findLongitudeById(userId);
         return realEstateRepository.getRealEstateNearestToUser(latitude, longitude);
@@ -111,29 +114,26 @@ public class RealEstateService {
 
     }
 
-    public void addRealEstate(RealEstate realEstate) {
-
-        realEstate.setUser(userRepository.findById(realEstate.getUserId()).orElseThrow(() -> new ResourceNotFoundException("userId not found: " + realEstate.getUserId())));
-        realEstate.setUserId(realEstate.getUserId());
+    public void addRealEstate(RealEstate realEstate, String authHeader) {
+        User user = userService.getUser(authHeader);
+        realEstate.setUser(user);
         realEstateRepository.save(realEstate);
-
     }
 
-    public void addRequest(Request userRequest) {
-
-        if (requestRepository.findRequest(userRequest.getRealEstateId(), userRequest.getUserId()).isPresent()) {
+    public void addRequest(int realEstateId, String authHeader) {
+        User user = userService.getUser(authHeader);
+        RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() -> new IllegalStateException("realEstate with id " + realEstateId + " not exists"));
+        if (requestRepository.findRequest(realEstateId, user.getId()).isPresent()) {
             throw new IllegalStateException("Request already added");
         }
 
-        userRequest.setUser(userRepository.findById(userRequest.getUserId()).orElseThrow(() -> new ResourceNotFoundException("userId not found: " + userRequest.getUserId())));
-        userRequest.setUserId(userRequest.getId());
+        Request request = new Request(
+                LocalDateTime.now(),
+                user,
+                realEstate
+        );
 
-        userRequest.setRealEstate(realEstateRepository.findById(userRequest.getRealEstateId()).orElseThrow(() -> new ResourceNotFoundException("realEstateId not found: " + userRequest.getRealEstateId())));
-        userRequest.setRealEstateId(userRequest.getId());
-
-        userRequest.setDateCreated(LocalDateTime.now());
-
-        requestRepository.save(userRequest);
+        requestRepository.save(request);
     }
 
     public List<Request> getRealEstateRequests(int realEstateId) {

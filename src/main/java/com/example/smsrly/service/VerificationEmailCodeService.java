@@ -23,11 +23,11 @@ public class VerificationEmailCodeService {
     }
 
 
-    public Optional<VerificationEmailCode> getCode(String code) {
+    public Optional<VerificationEmailCode> getCode(int code) {
         return verificationEmailCodeRepository.findByCode(code);
     }
 
-    public void setConfirmedAt(String code) {
+    public void setConfirmedAt(int code) {
         verificationEmailCodeRepository.updateConfirmedAt(
                 code, LocalDateTime.now());
     }

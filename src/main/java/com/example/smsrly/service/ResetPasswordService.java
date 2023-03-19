@@ -22,11 +22,11 @@ public class ResetPasswordService {
     }
 
 
-    public Optional<ResetPasswordCode> getCode(String code) {
+    public Optional<ResetPasswordCode> getCode(int code) {
         return resetPasswordCodeRepository.findByCode(code);
     }
 
-    public void setExpired(String code) {
+    public void setExpired(int code) {
         resetPasswordCodeRepository.updateConfirmedAt(
                 code, true);
     }

@@ -22,12 +22,18 @@ public class Request {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
-    private transient int userId;
 
     @ManyToOne
     @JoinColumn(name = "real_estate_id")
     private RealEstate realEstate;
-    private transient int realEstateId;
 
 
+    public Request() {
+    }
+
+    public Request(LocalDateTime dateCreated, User user, RealEstate realEstate) {
+        this.dateCreated = dateCreated;
+        this.user = user;
+        this.realEstate = realEstate;
+    }
 }

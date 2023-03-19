@@ -17,20 +17,21 @@ public class RealEstateController {
     private final RealEstateService service;
 
 
-    @GetMapping(path = "user/{userId}")
-    public List<RealEstate> realEstates(@PathVariable("userId") int userId) {
-        return service.getRealEstates(userId);
+    @GetMapping
+    public List<RealEstate> realEstates(@RequestHeader("Authorization") String authHeader) {
+        return service.getRealEstates(authHeader);
     }
 
 
-    @GetMapping(path = "{realEstateId}")
+    @GetMapping(path = "/{realEstateId}")
     public Optional<RealEstate> realEstate(@PathVariable("realEstateId") int realEstateId) {
         return service.getRealEstate(realEstateId);
     }
 
     @PostMapping
-    public void addRealEstate(@RequestBody RealEstate realEstate) {
-        service.addRealEstate(realEstate);
+    public void addRealEstate(@RequestHeader("Authorization") String authHeader,
+                              @RequestBody RealEstate realEstate) {
+        service.addRealEstate(realEstate, authHeader);
     }
 
     @DeleteMapping(path = "{realEstateId}")
@@ -54,9 +55,10 @@ public class RealEstateController {
     }
 
 
-    @PostMapping(path = "/request")
-    public void setUserRequest(@RequestBody Request userRequest) {
-        service.addRequest(userRequest);
+    @PostMapping(path = "/request/{realEstateId}")
+    public void setUserRequest(@RequestHeader("Authorization") String authHeader,
+                               @PathVariable("realEstateId") int realEstateId) {
+        service.addRequest(realEstateId,authHeader);
     }
 
     @GetMapping(path = "/requestedBy/{realEstateId}")

@@ -46,7 +46,7 @@ public class RealEstate {
     private String image;
 
     @JsonIgnore
-    @ManyToMany(mappedBy = "save", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "save", fetch = FetchType.LAZY,cascade = CascadeType.ALL)
     private Set<User> save;
 
     @JsonIgnore
@@ -56,6 +56,6 @@ public class RealEstate {
     @ManyToOne
     @JoinColumn(name = "owner_id")
     private User user;
-    private transient int userId;
+
 
 }

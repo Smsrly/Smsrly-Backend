@@ -46,6 +46,7 @@ public class User implements UserDetails {
 
     @Column(columnDefinition = "LONGTEXT")
     private String image;
+    @JsonIgnore
     private Boolean enable;
     @JsonIgnore
     @OneToMany(targetEntity = RealEstate.class, fetch = FetchType.LAZY, cascade = CascadeType.ALL)

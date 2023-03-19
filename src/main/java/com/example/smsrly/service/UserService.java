@@ -1,5 +1,6 @@
 package com.example.smsrly.service;
 
+import com.example.smsrly.config.JwtService;
 import com.example.smsrly.entity.RealEstate;
 import com.example.smsrly.entity.User;
 import com.example.smsrly.repository.RealEstateRepository;
@@ -21,26 +22,36 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RealEstateRepository realEstateRepository;
+    private final JwtService jwtService;
 
-    public Optional<User> getUser(int userId) {
-        return userRepository.findById(userId);
+    public String extractEmailFromToken(String authHeader) {
+        String token = authHeader.substring(7);
+        return jwtService.extractEmail(token);
     }
 
-    public void deleteUser(int userId) {
+    public int getUserId(String authHeader) {
+        String userEmail = extractEmailFromToken(authHeader);
+        User user = userRepository.findUserByEmail(userEmail).orElseThrow(() -> new IllegalStateException("user with email " + userEmail + " not exists"));
+        return user.getId();
+    }
 
-        if (!userRepository.existsById(userId)) {
-            throw new IllegalStateException("user with id " + userId + " not exists");
-        }
-        userRepository.deleteById(userId);
+    public User getUser(String authHeader) {
+        String userEmail = extractEmailFromToken(authHeader);
+        return userRepository.findUserByEmail(userEmail).orElseThrow(() -> new IllegalStateException("user with email " + userEmail + " not exists"));
+    }
+
+//    public Optional<User> getUser(String authHeader) {
+//        return userRepository.findUserByEmail(extractEmailFromToken(authHeader));
+//    }
+
+    public void deleteUser(String authHeader) {
+        userRepository.deleteById(getUserId(authHeader));
     }
 
     @Transactional
-    public void updateUser(int userId, String firstName, String lastName, String password, Optional<Long> phoneNumber, Optional<Double> latitude, Optional<Double> longitude, String image) {
+    public void updateUser(String authHeader, String firstName, String lastName, String password, Optional<Long> phoneNumber, Optional<Double> latitude, Optional<Double> longitude, String image) {
 
-
-        User user = userRepository.findById(userId).orElseThrow(() ->
-                new IllegalStateException("user with id " + userId + " not exists")
-        );
+        User user = getUser(authHeader);
 
         if (firstName != null && firstName.length() > 0 && !firstName.equals(user.getFirstName())) {
             user.setFirstName(firstName);
@@ -90,32 +101,41 @@ public class UserService {
 
     }
 
-    public void saveRealEstate(int userId, int realEstateId) {
-        User user = userRepository.findById(userId).get();
-        RealEstate realEstate = realEstateRepository.findById(realEstateId).get();
+    public void saveRealEstate(String authHeader, int realEstateId) {
+
+        User user = getUser(authHeader);
+
+        RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() ->
+                new IllegalStateException("realEstate with id " + realEstateId + " not exists")
+        );
+
         Set<RealEstate> realEstateList = user.getSave();
         realEstateList.add(realEstate);
         user.setSave(realEstateList);
         userRepository.save(user);
     }
 
-    public void deleteSaveRealEstate(int userId, int realEstateId) {
-        User user = userRepository.findById(userId).get();
-        RealEstate realEstate = realEstateRepository.findById(realEstateId).get();
+    public void deleteSaveRealEstate(String authHeader, int realEstateId) {
+
+        User user = getUser(authHeader);
+
+        RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() ->
+                new IllegalStateException("realEstate with id " + realEstateId + " not exists")
+        );
+
         Set<RealEstate> realEstateList = user.getSave();
         realEstateList.remove(realEstate);
         user.setSave(realEstateList);
         userRepository.save(user);
     }
 
-    public Set<RealEstate> getUserSaves(int userId) {
-        User user = userRepository.findById(userId).get();
+    public Set<RealEstate> getUserSaves(String authHeader) {
+        User user = getUser(authHeader);
         return user.getSave();
     }
 
-    public List<RealEstate> getUserUploads(int userId) {
-
-        return realEstateRepository.findUploadedRealEstateByUserId(userId);
-
+    public List<RealEstate> getUserUploads(String authHeader) {
+        User user = getUser(authHeader);
+        return realEstateRepository.findUploadedRealEstateByUserId(user.getId());
     }
 }
