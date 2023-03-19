@@ -16,9 +16,6 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     //  SELECT * FORM user WHERE email = ?
     Optional<User> findUserByEmail(String email);
 
-    //  SELECT * FORM user WHERE phone_number = ?
-    Optional<User> findUserByPhoneNumber(long phoneNumber);
-
     //SELECT id FROM user where email = "youssefamr2244@gamil.com";
     @Query(value = "SELECT id FROM user where email = :email", nativeQuery = true)
     int findIdByEmail(String email);
@@ -28,8 +25,9 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     @Query(value = "SELECT longitude FROM user where id = :userId", nativeQuery = true)
     double findLongitudeById(int userId);
+
     @Transactional
     @Modifying
-    @Query(value = "UPDATE user SET enable = TRUE WHERE email = :email",nativeQuery = true)
+    @Query(value = "UPDATE user SET enable = TRUE WHERE email = :email", nativeQuery = true)
     int enableUser(String email);
 }

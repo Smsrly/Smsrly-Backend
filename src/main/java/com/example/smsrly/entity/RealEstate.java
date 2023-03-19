@@ -46,11 +46,11 @@ public class RealEstate {
     private String image;
 
     @JsonIgnore
-    @ManyToMany(mappedBy = "save", fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    @ManyToMany(mappedBy = "save", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<User> save;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "realEstate", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "realEstate", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Request> realEstateRequest;
 
     @ManyToOne

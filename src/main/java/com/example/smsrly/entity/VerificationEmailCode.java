@@ -24,7 +24,7 @@ public class VerificationEmailCode {
     @Column(columnDefinition = "DATETIME")
     private LocalDateTime confirmedAt;
 
-    @ManyToOne()
+    @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
 

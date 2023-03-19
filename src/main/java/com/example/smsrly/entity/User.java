@@ -49,8 +49,7 @@ public class User implements UserDetails {
     @JsonIgnore
     private Boolean enable;
     @JsonIgnore
-    @OneToMany(targetEntity = RealEstate.class, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "owner_id", referencedColumnName = "id")
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<RealEstate> uploads;
 
     @JsonIgnore
@@ -67,13 +66,13 @@ public class User implements UserDetails {
     private Set<RealEstate> save;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Request> userRequests;
     @JsonIgnore
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<VerificationEmailCode> verificationEmailCodeList;
     @JsonIgnore
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<ResetPasswordCode> resetPasswordCodeList;
 
     @JsonIgnore

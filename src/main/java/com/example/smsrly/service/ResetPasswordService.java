@@ -13,9 +13,7 @@ import java.util.Optional;
 public class ResetPasswordService {
     private final ResetPasswordCodeRepository resetPasswordCodeRepository;
 
-    public void saveVerificationCode(ResetPasswordCode verificationEmailCode) {
-        resetPasswordCodeRepository.save(verificationEmailCode);
-    }
+
 
     public int getUserByResetPasswordCode(int code) {
         return resetPasswordCodeRepository.getUserIdByVerificationEmailCode(code);
