@@ -2,6 +2,7 @@ package com.example.smsrly.service;
 
 import com.example.smsrly.config.JwtService;
 import com.example.smsrly.entity.RealEstate;
+import com.example.smsrly.entity.Request;
 import com.example.smsrly.entity.User;
 import com.example.smsrly.repository.RealEstateRepository;
 import com.example.smsrly.repository.UserRepository;
@@ -49,9 +50,10 @@ public class UserService {
     }
 
     @Transactional
-    public void updateUser(String authHeader, String firstName, String lastName, String password, Optional<Long> phoneNumber, Optional<Double> latitude, Optional<Double> longitude, String image) {
+    public void updateUser(String authHeader, String email, String firstName, String lastName, String password, Optional<Long> phoneNumber, Optional<Double> latitude, Optional<Double> longitude, String image) {
 
-        User user = getUser(authHeader);
+        User user = authHeader != null ? getUser(authHeader) : userRepository.findUserByEmail(email).orElseThrow(() -> new IllegalStateException("User not found"));
+
 
         if (firstName != null && firstName.length() > 0 && !firstName.equals(user.getFirstName())) {
             user.setFirstName(firstName);
@@ -101,7 +103,7 @@ public class UserService {
 
     }
 
-    public void saveRealEstate(String authHeader, int realEstateId) {
+    public String saveRealEstate(String authHeader, int realEstateId) {
 
         User user = getUser(authHeader);
 
@@ -109,10 +111,15 @@ public class UserService {
                 new IllegalStateException("realEstate with id " + realEstateId + " not exists")
         );
 
+        if (user.getId() == realEstate.getUser().getId()) {
+            return "you are owner!!";
+        }
+
         Set<RealEstate> realEstateList = user.getSave();
         realEstateList.add(realEstate);
         user.setSave(realEstateList);
         userRepository.save(user);
+        return "save added";
     }
 
     public void deleteSaveRealEstate(String authHeader, int realEstateId) {
@@ -136,6 +143,11 @@ public class UserService {
 
     public List<RealEstate> getUserUploads(String authHeader) {
         User user = getUser(authHeader);
-        return realEstateRepository.findUploadedRealEstateByUserId(user.getId());
+        return user.getUploads();
+    }
+
+    public Set<Request> getUserRequests(String authHeader) {
+        User user = getUser(authHeader);
+        return user.getUserRequests();
     }
 }

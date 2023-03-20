@@ -52,7 +52,8 @@ public class AuthenticationService {
             throw new IllegalStateException("email is already inserted into DB");
         } else if (userEmail.isPresent() && !userEmail.get().isEnabled()) {
 
-            userService.updateUser(userEmail.get().getEmail(),
+            userService.updateUser(null,
+                    userEmail.get().getEmail(),
                     request.getFirstname(),
                     request.getLastname(),
                     request.getPassword(),
@@ -60,6 +61,7 @@ public class AuthenticationService {
                     Optional.of(request.getLatitude()),
                     Optional.of(request.getLongitude()),
                     request.getImage());
+
             return emailServices.sendEmail(userEmail.get(), generatedCode, "confirmationEmail");
         }
 
@@ -93,6 +95,7 @@ public class AuthenticationService {
                         request.getPassword()
                 )
         );
+
         var user = userRepository.findUserByEmail(request.getEmail())
                 .orElseThrow();
         var jwtToken = jwtService.generateToken(user);

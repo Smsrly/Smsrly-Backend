@@ -1,6 +1,7 @@
 package com.example.smsrly.controller;
 
 import com.example.smsrly.entity.RealEstate;
+import com.example.smsrly.entity.Request;
 import com.example.smsrly.entity.User;
 import com.example.smsrly.service.UserService;
 import lombok.AllArgsConstructor;
@@ -36,7 +37,7 @@ public class UserController {
                            @RequestParam(required = false) Optional<Double> latitude,
                            @RequestParam(required = false) Optional<Double> longitude,
                            @RequestParam(required = false) String image) {
-        service.updateUser(authHeader, firstName, lastName, password, phoneNumber, latitude, longitude, image);
+        service.updateUser(authHeader, null, firstName, lastName, password, phoneNumber, latitude, longitude, image);
     }
 
     @GetMapping(path = "/saves")
@@ -44,15 +45,15 @@ public class UserController {
         return service.getUserSaves(authHeader);
     }
 
-    @PostMapping("/save/{realEstateId}")
-    public void saveRealEstate(
+    @PostMapping(path = "/save/{realEstateId}")
+    public String saveRealEstate(
             @RequestHeader("Authorization") String authHeader,
             @PathVariable("realEstateId") int realEstateId
     ) {
-        service.saveRealEstate(authHeader, realEstateId);
+        return service.saveRealEstate(authHeader, realEstateId);
     }
 
-    @DeleteMapping("/save/{realEstateId}")
+    @DeleteMapping(path = "/save/{realEstateId}")
     public void deleteSaveRealEstate(
             @RequestHeader("Authorization") String authHeader,
             @PathVariable("realEstateId") int realEstateId
@@ -60,8 +61,13 @@ public class UserController {
         service.deleteSaveRealEstate(authHeader, realEstateId);
     }
 
-    @GetMapping("/uploads")
+    @GetMapping(path = "/uploads")
     public List<RealEstate> getUserUploads(@RequestHeader("Authorization") String authHeader) {
         return service.getUserUploads(authHeader);
+    }
+
+    @GetMapping(path = "/requests")
+    public Set<Request> getUserRequests(@RequestHeader("Authorization") String authHeader) {
+        return service.getUserRequests(authHeader);
     }
 }

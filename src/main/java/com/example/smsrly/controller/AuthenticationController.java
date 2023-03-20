@@ -16,12 +16,12 @@ public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
 
-    @PostMapping("/register")
+    @PostMapping(path = "/register")
     public String register(@RequestBody RegisterRequest request) {
         return authenticationService.register(request);
     }
 
-    @PostMapping("/authenticate")
+    @PostMapping(path = "/authenticate")
     public ResponseEntity<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request) {
         return ResponseEntity.ok(authenticationService.authenticate(request));
     }

@@ -7,7 +7,6 @@ import com.example.smsrly.repository.RealEstateRepository;
 import com.example.smsrly.repository.RequestRepository;
 import com.example.smsrly.repository.UserRepository;
 import lombok.AllArgsConstructor;
-import org.apache.velocity.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,26 +29,34 @@ public class RealEstateService {
         int userId = userService.getUserId(authHeader);
         double latitude = userRepository.findLatitudeById(userId);
         double longitude = userRepository.findLongitudeById(userId);
-        return realEstateRepository.getRealEstateNearestToUser(latitude, longitude);
+        return realEstateRepository.getRealEstateNearestToUser(latitude, longitude, userId);
     }
 
     public Optional<RealEstate> getRealEstate(int realEstateId) {
         return realEstateRepository.findById(realEstateId);
     }
 
-    public void deleteRealEstate(int realEstateId) {
-        if (!realEstateRepository.existsById(realEstateId)) {
-            throw new IllegalStateException("realEstate with id " + realEstateId + " not exists");
+    public String deleteRealEstate(String authHeader, int realEstateId) {
+        User user = userService.getUser(authHeader);
+        RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() -> new IllegalStateException("realEstate with id " + realEstateId + " not exists"));
+        if (user.getId() != realEstate.getUser().getId()) {
+            return "owner only have access to delete real estate";
         }
         realEstateRepository.deleteById(realEstateId);
+        return "real estate deleted";
     }
 
     @Transactional
-    public void updateRealEstate(int realEstateId, String title, String description, Optional<Double> area, Optional<Integer> floorNumber, Optional<Integer> bathroomNumber, Optional<Integer> roomNumber, Optional<Double> price, Optional<Double> latitude, Optional<Double> longitude, String image) {
+    public String updateRealEstate(String authHeader, int realEstateId, String title, String description, Optional<Double> area, Optional<Integer> floorNumber, Optional<Integer> bathroomNumber, Optional<Integer> roomNumber, Optional<Double> price, Optional<Double> latitude, Optional<Double> longitude, String image) {
 
+        User user = userService.getUser(authHeader);
         RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() ->
                 new IllegalStateException("realEstate with id " + realEstateId + " not exists")
         );
+
+        if (user.getId() != realEstate.getUser().getId()) {
+            return "owner only have access to delete real estate";
+        }
 
         if (title != null && title.length() > 0 && !title.equals(realEstate.getTitle())) {
             realEstate.setTitle(title);
@@ -112,6 +119,7 @@ public class RealEstateService {
             realEstate.setImage(image);
         }
 
+        return "updated";
     }
 
     public void addRealEstate(RealEstate realEstate, String authHeader) {
@@ -120,11 +128,16 @@ public class RealEstateService {
         realEstateRepository.save(realEstate);
     }
 
-    public void addRequest(int realEstateId, String authHeader) {
+    public String addRequest(int realEstateId, String authHeader) {
         User user = userService.getUser(authHeader);
         RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() -> new IllegalStateException("realEstate with id " + realEstateId + " not exists"));
+
+        if (user.getId() == realEstate.getUser().getId()) {
+            return "you are owner!!";
+        }
+
         if (requestRepository.findRequest(realEstateId, user.getId()).isPresent()) {
-            throw new IllegalStateException("Request already added");
+            return "Request already added";
         }
 
         Request request = new Request(
@@ -132,8 +145,8 @@ public class RealEstateService {
                 user,
                 realEstate
         );
-
         requestRepository.save(request);
+        return "request added";
     }
 
     public List<Request> getRealEstateRequests(int realEstateId) {

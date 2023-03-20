@@ -35,12 +35,14 @@ public class RealEstateController {
     }
 
     @DeleteMapping(path = "{realEstateId}")
-    public void deleteRealEstate(@PathVariable("realEstateId") int realEstateId) {
-        service.deleteRealEstate(realEstateId);
+    public String deleteRealEstate(@RequestHeader("Authorization") String authHeader,
+                                   @PathVariable("realEstateId") int realEstateId) {
+        return service.deleteRealEstate(authHeader, realEstateId);
     }
 
     @PutMapping(path = "{realEstateId}")
-    public void updateRealEstate(@PathVariable("realEstateId") int realEstateId,
+    public String updateRealEstate(@RequestHeader("Authorization") String authHeader,
+                                 @PathVariable("realEstateId") int realEstateId,
                                  @RequestParam(required = false) String title,
                                  @RequestParam(required = false) String description,
                                  @RequestParam(required = false) Optional<Double> area,
@@ -51,14 +53,14 @@ public class RealEstateController {
                                  @RequestParam(required = false) Optional<Double> latitude,
                                  @RequestParam(required = false) Optional<Double> longitude,
                                  @RequestParam(required = false) String image) {
-        service.updateRealEstate(realEstateId, title, description, area, floorNumber, bathroomNumber, roomNumber, price, latitude, longitude, image);
+        return service.updateRealEstate(authHeader, realEstateId, title, description, area, floorNumber, bathroomNumber, roomNumber, price, latitude, longitude, image);
     }
 
 
     @PostMapping(path = "/request/{realEstateId}")
-    public void setUserRequest(@RequestHeader("Authorization") String authHeader,
+    public String setUserRequest(@RequestHeader("Authorization") String authHeader,
                                @PathVariable("realEstateId") int realEstateId) {
-        service.addRequest(realEstateId,authHeader);
+        return service.addRequest(realEstateId, authHeader);
     }
 
     @GetMapping(path = "/requestedBy/{realEstateId}")
