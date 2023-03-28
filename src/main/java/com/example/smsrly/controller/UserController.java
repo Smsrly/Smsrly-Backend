@@ -2,7 +2,9 @@ package com.example.smsrly.controller;
 
 import com.example.smsrly.entity.RealEstate;
 import com.example.smsrly.entity.Request;
-import com.example.smsrly.entity.User;
+import com.example.smsrly.entity.Save;
+import com.example.smsrly.response.Response;
+import com.example.smsrly.response.UserResponse;
 import com.example.smsrly.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -19,34 +21,34 @@ public class UserController {
     private final UserService service;
 
     @GetMapping
-    public User user(@RequestHeader("Authorization") String authHeader) {
-        return service.getUser(authHeader);
+    public UserResponse getUser(@RequestHeader("Authorization") String authHeader) {
+        return service.getUserInfo(authHeader);
     }
 
     @DeleteMapping
-    public void deleteUser(@RequestHeader("Authorization") String authHeader) {
-        service.deleteUser(authHeader);
+    public Response deleteUser(@RequestHeader("Authorization") String authHeader) {
+        return service.deleteUser(authHeader);
     }
 
     @PutMapping
-    public void updateUser(@RequestHeader("Authorization") String authHeader,
-                           @RequestParam(required = false) String firstName,
-                           @RequestParam(required = false) String lastName,
-                           @RequestParam(required = false) String password,
-                           @RequestParam(required = false) Optional<Long> phoneNumber,
-                           @RequestParam(required = false) Optional<Double> latitude,
-                           @RequestParam(required = false) Optional<Double> longitude,
-                           @RequestParam(required = false) String image) {
-        service.updateUser(authHeader, null, firstName, lastName, password, phoneNumber, latitude, longitude, image);
+    public Response updateUser(@RequestHeader("Authorization") String authHeader,
+                               @RequestParam(required = false) String firstName,
+                               @RequestParam(required = false) String lastName,
+                               @RequestParam(required = false) String password,
+                               @RequestParam(required = false) Optional<Long> phoneNumber,
+                               @RequestParam(required = false) Optional<Double> latitude,
+                               @RequestParam(required = false) Optional<Double> longitude,
+                               @RequestParam(required = false) String image) {
+        return service.updateUser(authHeader, null, firstName, lastName, password, phoneNumber, latitude, longitude, image);
     }
 
     @GetMapping(path = "/saves")
-    public Set<RealEstate> userSaves(@RequestHeader("Authorization") String authHeader) {
+    public Set<Save> userSaves(@RequestHeader("Authorization") String authHeader) {
         return service.getUserSaves(authHeader);
     }
 
     @PostMapping(path = "/save/{realEstateId}")
-    public String saveRealEstate(
+    public Response saveRealEstate(
             @RequestHeader("Authorization") String authHeader,
             @PathVariable("realEstateId") int realEstateId
     ) {
@@ -54,11 +56,11 @@ public class UserController {
     }
 
     @DeleteMapping(path = "/save/{realEstateId}")
-    public void deleteSaveRealEstate(
+    public Response deleteSaveRealEstate(
             @RequestHeader("Authorization") String authHeader,
             @PathVariable("realEstateId") int realEstateId
     ) {
-        service.deleteSaveRealEstate(authHeader, realEstateId);
+        return service.deleteSaveRealEstate(authHeader, realEstateId);
     }
 
     @GetMapping(path = "/uploads")

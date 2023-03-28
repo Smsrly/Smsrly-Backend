@@ -8,6 +8,7 @@ import com.example.smsrly.entity.ResetPasswordCode;
 import com.example.smsrly.entity.VerificationEmailCode;
 import com.example.smsrly.entity.User;
 import com.example.smsrly.repository.UserRepository;
+import com.example.smsrly.response.Response;
 import lombok.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -42,15 +43,15 @@ public class AuthenticationService {
     }
 
 
-    public String register(RegisterRequest request) {
+    public Response register(RegisterRequest request) {
 
         int generatedCode = generateCode();
 
         Optional<User> userEmail = userRepository.findUserByEmail(request.getEmail());
 
         if (userEmail.isPresent() && userEmail.get().isEnabled()) {
-            throw new IllegalStateException("email is already inserted into DB");
-        } else if (userEmail.isPresent() && !userEmail.get().isEnabled()) {
+            return Response.builder().message("email is already inserted into DB").build();
+        } else if (userEmail.isPresent() && !userEmail.get().isEnabled() && verificationEmailCodeService.checkIfCodeExpiredOrNot(userEmail.get().getId()).isEmpty()) {
 
             userService.updateUser(null,
                     userEmail.get().getEmail(),
@@ -63,6 +64,8 @@ public class AuthenticationService {
                     request.getImage());
 
             return emailServices.sendEmail(userEmail.get(), generatedCode, "confirmationEmail");
+        } else if (userEmail.isPresent() && !userEmail.get().isEnabled() && verificationEmailCodeService.checkIfCodeExpiredOrNot(userEmail.get().getId()).isPresent()) {
+            return Response.builder().message("try again after 15 min").build();
         }
 
         var user = User.builder()
@@ -83,10 +86,10 @@ public class AuthenticationService {
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
 
-        Optional<User> userEmail = userRepository.findUserByEmail(request.getEmail());
+        Optional<User> user = userRepository.findUserByEmail(request.getEmail());
 
-        if (userEmail.isEmpty()) {
-            throw new IllegalStateException("email not found in DB");
+        if (user.isEmpty()) {
+            return AuthenticationResponse.builder().message("email not found in DB").build();
         }
 
         authenticationManager.authenticate(
@@ -96,83 +99,88 @@ public class AuthenticationService {
                 )
         );
 
-        var user = userRepository.findUserByEmail(request.getEmail())
-                .orElseThrow();
-        var jwtToken = jwtService.generateToken(user);
+        var jwtToken = jwtService.generateToken(user.get());
         return AuthenticationResponse.builder()
                 .token(jwtToken)
                 .build();
     }
 
     @Transactional
-    public AuthenticationResponse emailConfirmationCode(int code) {
-        VerificationEmailCode verificationEmailCode = verificationEmailCodeService
-                .getCode(code)
-                .orElseThrow(() ->
-                        new IllegalStateException("code not found"));
+    public AuthenticationResponse emailConfirmationCode(String email, int code) {
+        User user = userRepository.findUserByEmail(email).orElseThrow(() -> new IllegalStateException("user not found"));
 
-        if (verificationEmailCode.getConfirmedAt() != null) {
-            throw new IllegalStateException("email already confirmed");
+        Optional<VerificationEmailCode> verificationEmailCode = verificationEmailCodeService
+                .getCode(code, user.getId());
+
+        if (verificationEmailCode.isEmpty()) {
+            return AuthenticationResponse.builder().message("code is invalid").build();
         }
 
-        LocalDateTime expiredAt = verificationEmailCode.getExpiredAt();
+        if (verificationEmailCode.get().getConfirmedAt() != null) {
+            return AuthenticationResponse.builder()
+                    .message("email already confirmed")
+                    .build();
+        }
+
+        LocalDateTime expiredAt = verificationEmailCode.get().getExpiredAt();
 
         if (expiredAt.isBefore(LocalDateTime.now())) {
-            throw new IllegalStateException("code expired");
+            return AuthenticationResponse.builder()
+                    .message("code expired")
+                    .build();
         }
 
-        verificationEmailCodeService.setConfirmedAt(code);
-        userRepository.enableUser(verificationEmailCode.getUser().getEmail());
+        verificationEmailCodeService.setConfirmedAt(code, user.getId());
+        userRepository.enableUser(verificationEmailCode.get().getUser().getEmail());
 
-
-        int userId = verificationEmailCodeService.getUserByVerificationEmailCode(code);
-        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalStateException("user with id " + userId + " not exists"));
-
-        verificationEmailCodeService.expireAllRequestsCode(user.getId());
 
         return AuthenticationResponse.builder()
                 .token(jwtService.generateToken(user))
+                .message("activated")
                 .build();
     }
 
     @Transactional
-    public AuthenticationResponse passwordConfirmationCode(int code) {
-        ResetPasswordCode resetPasswordCode = resetPasswordService
-                .getCode(code)
-                .orElseThrow(() ->
-                        new IllegalStateException("code not found"));
+    public AuthenticationResponse passwordConfirmationCode(String email, int code) {
+        User user = userRepository.findUserByEmail(email).orElseThrow(() -> new IllegalStateException("user not found"));
 
-        if (resetPasswordCode.getExpired()) {
-            throw new IllegalStateException("code is expired");
+        Optional<ResetPasswordCode> resetPasswordCode = resetPasswordService
+                .getCode(code, user.getId());
+
+        if (resetPasswordCode.isEmpty()) {
+            return AuthenticationResponse.builder().message("code is invalid").build();
         }
-        resetPasswordService.setExpired(code);
 
-        int userId = resetPasswordService.getUserByResetPasswordCode(code);
-        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalStateException("user with id " + userId + " not exists"));
+        if (resetPasswordCode.get().getExpired()) {
+            return AuthenticationResponse.builder().message("code is expired").build();
+        }
 
-        resetPasswordService.expireAllRequestsCode(user.getId());
+        resetPasswordService.setExpired(code, user.getId());
+
         return AuthenticationResponse.builder()
                 .token(jwtService.generateToken(user))
                 .build();
     }
 
 
-    public String resetPassword(String userEmail) {
+    public Response resetPassword(String userEmail) {
         int generatedCode = generateCode();
         Optional<User> user = userRepository.findUserByEmail(userEmail);
         if (user.isEmpty()) {
-            return "email not exists in database";
+            return Response.builder().message("email not exists in database").build();
         }
+
+        resetPasswordService.expireAllRequestedCode(user.get().getId());
 
         return emailServices.sendEmail(user.get(), generatedCode, "resetPassword");
     }
 
 
     @Transactional
-    public String updateUserPassword(String authHeader, String password) {
+    public Response updateUserPassword(String authHeader, String password) {
         User user = userService.getUser(authHeader);
         user.setPassword(passwordEncoder.encode(password));
-        return "password updated";
+        return Response.builder().message("password updated").build();
     }
 
 }

@@ -3,9 +3,13 @@ package com.example.smsrly.service;
 import com.example.smsrly.config.JwtService;
 import com.example.smsrly.entity.RealEstate;
 import com.example.smsrly.entity.Request;
+import com.example.smsrly.entity.Save;
 import com.example.smsrly.entity.User;
 import com.example.smsrly.repository.RealEstateRepository;
+import com.example.smsrly.repository.SaveRepository;
 import com.example.smsrly.repository.UserRepository;
+import com.example.smsrly.response.Response;
+import com.example.smsrly.response.UserResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,6 +29,8 @@ public class UserService {
     private final RealEstateRepository realEstateRepository;
     private final JwtService jwtService;
 
+    private final SaveRepository saveRepository;
+
     public String extractEmailFromToken(String authHeader) {
         String token = authHeader.substring(7);
         return jwtService.extractEmail(token);
@@ -41,16 +47,30 @@ public class UserService {
         return userRepository.findUserByEmail(userEmail).orElseThrow(() -> new IllegalStateException("user with email " + userEmail + " not exists"));
     }
 
-//    public Optional<User> getUser(String authHeader) {
-//        return userRepository.findUserByEmail(extractEmailFromToken(authHeader));
-//    }
+    public UserResponse getUserInfo(String authHeader) {
+        User user = getUser(authHeader);
+        return UserResponse.builder()
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .latitude(user.getLatitude())
+                .longitude(user.getLongitude())
+                .image(user.getImage())
+                .build();
+    }
 
-    public void deleteUser(String authHeader) {
+    public Response deleteUser(String authHeader) {
         userRepository.deleteById(getUserId(authHeader));
+        return Response.builder().message("user deleted").build();
     }
 
     @Transactional
-    public void updateUser(String authHeader, String email, String firstName, String lastName, String password, Optional<Long> phoneNumber, Optional<Double> latitude, Optional<Double> longitude, String image) {
+    public Response updateUser(String authHeader, String email, String firstName, String lastName, String password, Optional<Long> phoneNumber, Optional<Double> latitude, Optional<Double> longitude, String image) {
+
+        if (email == null) {
+            return Response.builder().message("User not found").build();
+        }
 
         User user = authHeader != null ? getUser(authHeader) : userRepository.findUserByEmail(email).orElseThrow(() -> new IllegalStateException("User not found"));
 
@@ -76,7 +96,7 @@ public class UserService {
         }
 
         if (phoneNumber.isPresent()) {
-            long phoneNum = Long.parseLong(phoneNumber.get().toString());
+            long phoneNum = phoneNumber.get();
 
             if (phoneNum > 9999 && phoneNum != user.getPhoneNumber()) {
                 user.setPhoneNumber(phoneNum);
@@ -84,14 +104,14 @@ public class UserService {
         }
 
         if (latitude.isPresent()) {
-            double lat = Double.parseDouble(latitude.get().toString());
+            double lat = latitude.get();
             if (lat > 0 && !(lat == user.getLatitude())) {
                 user.setLongitude(lat);
             }
         }
 
         if (longitude.isPresent()) {
-            double lon = Double.parseDouble(longitude.get().toString());
+            double lon = longitude.get();
             if (lon > 0 && !(lon == user.getLongitude())) {
                 user.setLatitude(lon);
             }
@@ -101,9 +121,10 @@ public class UserService {
             user.setImage(image);
         }
 
+        return Response.builder().message("updated").build();
     }
 
-    public String saveRealEstate(String authHeader, int realEstateId) {
+    public Response saveRealEstate(String authHeader, int realEstateId) {
 
         User user = getUser(authHeader);
 
@@ -112,17 +133,16 @@ public class UserService {
         );
 
         if (user.getId() == realEstate.getUser().getId()) {
-            return "you are owner!!";
+            return Response.builder().message("you are owner!!").build();
         }
-
-        Set<RealEstate> realEstateList = user.getSave();
-        realEstateList.add(realEstate);
-        user.setSave(realEstateList);
-        userRepository.save(user);
-        return "save added";
+        Save save = new Save(
+                user, realEstate
+        );
+        saveRepository.save(save);
+        return Response.builder().message("save added").build();
     }
 
-    public void deleteSaveRealEstate(String authHeader, int realEstateId) {
+    public Response deleteSaveRealEstate(String authHeader, int realEstateId) {
 
         User user = getUser(authHeader);
 
@@ -130,13 +150,15 @@ public class UserService {
                 new IllegalStateException("realEstate with id " + realEstateId + " not exists")
         );
 
-        Set<RealEstate> realEstateList = user.getSave();
-        realEstateList.remove(realEstate);
-        user.setSave(realEstateList);
-        userRepository.save(user);
+        Save save = new Save(
+                user, realEstate
+        );
+        saveRepository.delete(save);
+
+        return Response.builder().message("save deleted").build();
     }
 
-    public Set<RealEstate> getUserSaves(String authHeader) {
+    public Set<Save> getUserSaves(String authHeader) {
         User user = getUser(authHeader);
         return user.getSave();
     }

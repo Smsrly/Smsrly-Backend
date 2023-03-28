@@ -1,7 +1,6 @@
 package com.example.smsrly.repository;
 
 import com.example.smsrly.entity.Request;
-import com.example.smsrly.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

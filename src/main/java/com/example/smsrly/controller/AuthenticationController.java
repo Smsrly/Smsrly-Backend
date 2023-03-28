@@ -3,9 +3,9 @@ package com.example.smsrly.controller;
 import com.example.smsrly.auth.AuthenticationRequest;
 import com.example.smsrly.auth.AuthenticationResponse;
 import com.example.smsrly.auth.RegisterRequest;
+import com.example.smsrly.response.Response;
 import com.example.smsrly.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -17,33 +17,35 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
     @PostMapping(path = "/register")
-    public String register(@RequestBody RegisterRequest request) {
+    public Response register(@RequestBody RegisterRequest request) {
         return authenticationService.register(request);
     }
 
     @PostMapping(path = "/authenticate")
-    public ResponseEntity<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request) {
-        return ResponseEntity.ok(authenticationService.authenticate(request));
+    public AuthenticationResponse authenticate(@RequestBody AuthenticationRequest request) {
+        return authenticationService.authenticate(request);
     }
 
     @GetMapping(path = "/confirmEmail")
-    public AuthenticationResponse confirmEmail(@RequestParam("code") int code) {
-        return authenticationService.emailConfirmationCode(code);
+    public AuthenticationResponse confirmEmail(@RequestParam("email") String email,
+                                               @RequestParam("code") int code) {
+        return authenticationService.emailConfirmationCode(email, code);
     }
 
     @GetMapping(path = "/resetPassword")
-    public String resetPassword(@RequestParam("email") String userEmail) {
+    public Response resetPassword(@RequestParam("email") String userEmail) {
         return authenticationService.resetPassword(userEmail);
     }
 
     @GetMapping(path = "/confirmPassword")
-    public AuthenticationResponse confirmPassword(@RequestParam("code") int code) {
-        return authenticationService.passwordConfirmationCode(code);
+    public AuthenticationResponse confirmPassword(@RequestParam("email") String email,
+                                                  @RequestParam("code") int code) {
+        return authenticationService.passwordConfirmationCode(email, code);
     }
 
     @PutMapping(path = "/newPassword")
-    public String updateUserPassword(@RequestHeader("Authorization") String authHeader,
-                                     @RequestParam("password") String password) {
+    public Response updateUserPassword(@RequestHeader("Authorization") String authHeader,
+                                       @RequestParam("password") String password) {
         return authenticationService.updateUserPassword(authHeader, password);
     }
 

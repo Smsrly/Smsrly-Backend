@@ -13,26 +13,19 @@ import java.util.Optional;
 public class ResetPasswordService {
     private final ResetPasswordCodeRepository resetPasswordCodeRepository;
 
-
-
-    public int getUserByResetPasswordCode(int code) {
-        return resetPasswordCodeRepository.getUserIdByVerificationEmailCode(code);
+    public Optional<ResetPasswordCode> getCode(int code, int userId) {
+        return resetPasswordCodeRepository.findByCodeAndUserId(code, userId);
     }
 
-
-    public Optional<ResetPasswordCode> getCode(int code) {
-        return resetPasswordCodeRepository.findByCode(code);
-    }
-
-    public void setExpired(int code) {
+    public void setExpired(int code, int userId) {
         resetPasswordCodeRepository.updateConfirmedAt(
-                code, true);
+                code, userId, true);
     }
 
 
-    public void expireAllRequestsCode(int code) {
-        resetPasswordCodeRepository.confirmAllRequestsCode(
-                code, true);
+    public void expireAllRequestedCode(int userId) {
+        resetPasswordCodeRepository.confirmAllRequestedCode(
+                userId, true);
     }
 
 

@@ -1,4 +1,4 @@
-package com.example.smsrly.auth;
+package com.example.smsrly.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthenticationResponse {
-    private String token;
+public class Response {
     private String message;
 }

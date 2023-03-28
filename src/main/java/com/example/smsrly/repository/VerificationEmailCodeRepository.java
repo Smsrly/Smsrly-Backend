@@ -12,20 +12,15 @@ import java.util.Optional;
 
 @Repository
 public interface VerificationEmailCodeRepository extends JpaRepository<VerificationEmailCode, Integer> {
-    @Query(value = "SELECT * FROM verification_email_code where verification_code = :verificationCode", nativeQuery = true)
-    Optional<VerificationEmailCode> findByCode(int verificationCode);
+    @Query(value = "SELECT * FROM verification_email_code where verification_code = :verificationCode and user_id = :userId", nativeQuery = true)
+    Optional<VerificationEmailCode> findByCodeAndUserId(int verificationCode, int userId);
 
     @Transactional
     @Modifying
-    @Query(value = "UPDATE verification_email_code SET confirmed_at = :confirmedAt WHERE verification_code = :code", nativeQuery = true)
-    void updateConfirmedAt(int code, LocalDateTime confirmedAt);
+    @Query(value = "UPDATE verification_email_code SET confirmed_at = :confirmedAt WHERE verification_code = :code and user_id = :userId", nativeQuery = true)
+    void updateConfirmedAt(int code, int userId, LocalDateTime confirmedAt);
 
-    @Transactional
-    @Modifying
-    @Query(value = "UPDATE verification_email_code SET confirmed_at = :confirmedAt WHERE user_id =:userId", nativeQuery = true)
-    void confirmAllRequestsCode(int userId, LocalDateTime confirmedAt);
-
-    @Query(value = "SELECT user_id FROM verification_email_code where verification_code = :code", nativeQuery = true)
-    int getUserIdByVerificationEmailCode(int code);
+    @Query(value = "SELECT * FROM verification_email_code where user_id = :userId and expired_at > :now", nativeQuery = true)
+    Optional<VerificationEmailCode> getByUserIdAndExpiredDate(int userId, LocalDateTime now);
 
 }

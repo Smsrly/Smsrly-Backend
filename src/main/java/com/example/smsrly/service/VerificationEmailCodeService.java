@@ -18,26 +18,17 @@ public class VerificationEmailCodeService {
         verificationEmailCodeRepository.save(verificationEmailCode);
     }
 
-    public int getUserByVerificationEmailCode(int code) {
-        return verificationEmailCodeRepository.getUserIdByVerificationEmailCode(code);
+    public Optional<VerificationEmailCode> getCode(int code, int userId) {
+        return verificationEmailCodeRepository.findByCodeAndUserId(code, userId);
     }
 
-
-    public Optional<VerificationEmailCode> getCode(int code) {
-        return verificationEmailCodeRepository.findByCode(code);
-    }
-
-    public void setConfirmedAt(int code) {
+    public void setConfirmedAt(int code, int userId) {
         verificationEmailCodeRepository.updateConfirmedAt(
-                code, LocalDateTime.now());
+                code, userId, LocalDateTime.now());
     }
 
-
-    public void expireAllRequestsCode(int code) {
-        verificationEmailCodeRepository.confirmAllRequestsCode(
-                code, LocalDateTime.now());
+    public Optional<VerificationEmailCode> checkIfCodeExpiredOrNot(int userId) {
+        return verificationEmailCodeRepository.getByUserIdAndExpiredDate(userId, LocalDateTime.now());
     }
-
-
 
 }

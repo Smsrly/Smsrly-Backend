@@ -4,6 +4,7 @@ import com.example.smsrly.entity.ResetPasswordCode;
 import com.example.smsrly.entity.User;
 import com.example.smsrly.entity.VerificationEmailCode;
 import com.example.smsrly.repository.ResetPasswordCodeRepository;
+import com.example.smsrly.response.Response;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ public class EmailServices extends SimpleMailMessage {
 
     private final JavaMailSender mailSender;
 
-    public String sendEmail(User user, int generatedCode, String type) {
+    public Response sendEmail(User user, int generatedCode, String type) {
 
         if (type.equals("confirmationEmail")) {
             VerificationEmailCode verificationEmailCode = new VerificationEmailCode(
@@ -55,9 +56,9 @@ public class EmailServices extends SimpleMailMessage {
             mailSender.send(message);
 
         } catch (MessagingException e) {
-            return "failed to send email, " + e;
+            return Response.builder().message("failed to send email, " + e).build();
         }
-        return "verification code sent";
+        return Response.builder().message("verification code sent").build();
     }
 
     private String confirmationEmailTemplate(String userName, int code) {

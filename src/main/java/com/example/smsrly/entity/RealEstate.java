@@ -45,9 +45,9 @@ public class RealEstate {
     @Column(columnDefinition = "LONGTEXT")
     private String image;
 
-    @JsonIgnore
-    @ManyToMany(mappedBy = "save", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Set<User> save;
+//    @JsonIgnore
+//    @ManyToMany(mappedBy = "save")
+//    private Set<User> save;
 
     @JsonIgnore
     @OneToMany(mappedBy = "realEstate", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
@@ -57,5 +57,7 @@ public class RealEstate {
     @JoinColumn(name = "owner_id")
     private User user;
 
-
+    @JsonIgnore
+    @OneToMany(mappedBy = "realEstate", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Set<Save> save;
 }
