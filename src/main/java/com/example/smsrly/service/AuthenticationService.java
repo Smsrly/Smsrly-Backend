@@ -102,6 +102,7 @@ public class AuthenticationService {
         var jwtToken = jwtService.generateToken(user.get());
         return AuthenticationResponse.builder()
                 .token(jwtToken)
+                .message("log in success")
                 .build();
     }
 
@@ -159,6 +160,7 @@ public class AuthenticationService {
 
         return AuthenticationResponse.builder()
                 .token(jwtService.generateToken(user))
+                .message("code confirmed")
                 .build();
     }
 

@@ -1,11 +1,13 @@
 package com.example.smsrly.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
@@ -45,9 +47,9 @@ public class RealEstate {
     @Column(columnDefinition = "LONGTEXT")
     private String image;
 
-//    @JsonIgnore
-//    @ManyToMany(mappedBy = "save")
-//    private Set<User> save;
+    @Column(name = "date_uploaded", columnDefinition = "DATETIME", nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime dateUploaded;
 
     @JsonIgnore
     @OneToMany(mappedBy = "realEstate", fetch = FetchType.LAZY, cascade = CascadeType.ALL)

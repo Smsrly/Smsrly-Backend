@@ -151,7 +151,14 @@ public class RealEstateService {
 
     public Response addRealEstate(RealEstate realEstate, String authHeader) {
         User user = userService.getUser(authHeader);
+
+        List<RealEstate> realEstateList = realEstateRepository.findUploadedRealEstateByUserId(user.getId(), LocalDateTime.now(), LocalDateTime.now().minusHours(1));
+        if (realEstateList.size() != 0 && realEstateList.size() >= 10) {
+            return Response.builder().message("there are upload limit, please try again after 1 hour").build();
+        }
+
         realEstate.setUser(user);
+        realEstate.setDateUploaded(LocalDateTime.now());
         realEstateRepository.save(realEstate);
         return Response.builder().message("real estate added").build();
     }
@@ -159,6 +166,7 @@ public class RealEstateService {
     public Response addRequest(int realEstateId, String authHeader) {
         User user = userService.getUser(authHeader);
         RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() -> new IllegalStateException("realEstate with id " + realEstateId + " not exists"));
+        List<Request> requests = requestRepository.findRequestedRealEstateByUserId(user.getId(), LocalDateTime.now(), LocalDateTime.now().minusHours(1));
 
         if (user.getId() == realEstate.getUser().getId()) {
             return Response.builder().message("you are owner!!").build();
@@ -168,11 +176,16 @@ public class RealEstateService {
             return Response.builder().message("Request already added").build();
         }
 
+        if (requests.size() != 0 && requests.size() >= 10) {
+            return Response.builder().message("there are request limit, please try again after 1 hour").build();
+        }
+
         Request request = new Request(
                 LocalDateTime.now(),
                 user,
                 realEstate
         );
+
         requestRepository.save(request);
         return Response.builder().message("request added").build();
     }

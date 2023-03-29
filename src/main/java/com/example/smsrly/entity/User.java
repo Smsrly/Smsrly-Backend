@@ -52,19 +52,6 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<RealEstate> uploads;
 
-//    @JsonIgnore
-//    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-//    @JoinTable(
-//            name = "save",
-//            joinColumns = {
-//                    @JoinColumn(name = "customer_id")
-//            },
-//            inverseJoinColumns = {
-//                    @JoinColumn(name = "real_estate_id")
-//            }
-//    )
-//    private Set<RealEstate> save;
-
     @JsonIgnore
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Save> save;
