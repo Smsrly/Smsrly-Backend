@@ -1,5 +1,6 @@
 package com.example.smsrly.service;
 
+import com.example.smsrly.auth.AuthorizationRequest;
 import com.example.smsrly.config.JwtService;
 import com.example.smsrly.auth.AuthenticationRequest;
 import com.example.smsrly.auth.AuthenticationResponse;
@@ -185,4 +186,26 @@ public class AuthenticationService {
         return Response.builder().message("password updated").build();
     }
 
+    public AuthenticationResponse authorization(AuthorizationRequest request) {
+
+        Optional<User> userEmail = userRepository.findUserByEmail(request.getEmail());
+
+        if (userEmail.isPresent()) {
+            return AuthenticationResponse.builder().token(jwtService.generateToken(userEmail.get())).message("log in successfully").build();
+        }
+
+        var user = User.builder()
+                .firstName(request.getFirstname())
+                .lastName(request.getLastname())
+                .email(request.getEmail())
+                .image(request.getImage())
+                .latitude(0.0)
+                .longitude(0.0)
+                .phoneNumber(0)
+                .enable(true)
+                .build();
+        userRepository.save(user);
+
+        return AuthenticationResponse.builder().token(jwtService.generateToken(user)).message("log in successfully").build();
+    }
 }

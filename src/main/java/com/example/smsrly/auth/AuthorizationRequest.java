@@ -1,7 +1,5 @@
 package com.example.smsrly.auth;
 
-
-import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,15 +9,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegisterRequest {
+public class AuthorizationRequest {
 
-    private String image;
     private String firstname;
     private String lastname;
     private String email;
-    private String password;
-    private long phoneNumber;
-    private double latitude;
-    private double longitude;
+    private String image;
 
 }

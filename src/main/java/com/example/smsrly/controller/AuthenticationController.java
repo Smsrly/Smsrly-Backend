@@ -2,6 +2,7 @@ package com.example.smsrly.controller;
 
 import com.example.smsrly.auth.AuthenticationRequest;
 import com.example.smsrly.auth.AuthenticationResponse;
+import com.example.smsrly.auth.AuthorizationRequest;
 import com.example.smsrly.auth.RegisterRequest;
 import com.example.smsrly.response.Response;
 import com.example.smsrly.service.AuthenticationService;
@@ -21,9 +22,14 @@ public class AuthenticationController {
         return authenticationService.register(request);
     }
 
-    @PostMapping(path = "/authenticate")
+    @PostMapping(path = "/authentication")
     public AuthenticationResponse authenticate(@RequestBody AuthenticationRequest request) {
         return authenticationService.authenticate(request);
+    }
+
+    @PostMapping(path = "/authorization")
+    public AuthenticationResponse authorization(@RequestBody AuthorizationRequest request) {
+        return authenticationService.authorization(request);
     }
 
     @GetMapping(path = "/confirmEmail")
