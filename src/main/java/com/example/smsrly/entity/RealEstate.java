@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -22,8 +24,12 @@ public class RealEstate {
     private int id;
 
     @Column(nullable = false)
+    @NotEmpty(message = "title must be not empty")
+    @NotNull(message = "title must be not null")
     private String title;
     @Column(nullable = false)
+    @NotEmpty(message = "description must be not empty")
+    @NotNull(message = "description must be not null")
     private String description;
 
     @Column(nullable = false)

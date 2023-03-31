@@ -6,6 +6,7 @@ import com.example.smsrly.auth.AuthorizationRequest;
 import com.example.smsrly.auth.RegisterRequest;
 import com.example.smsrly.response.Response;
 import com.example.smsrly.service.AuthenticationService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,17 +19,17 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
     @PostMapping(path = "/register")
-    public Response register(@RequestBody RegisterRequest request) {
+    public Response register(@RequestBody @Valid RegisterRequest request) {
         return authenticationService.register(request);
     }
 
     @PostMapping(path = "/authentication")
-    public AuthenticationResponse authenticate(@RequestBody AuthenticationRequest request) {
+    public AuthenticationResponse authenticate(@RequestBody @Valid AuthenticationRequest request) {
         return authenticationService.authenticate(request);
     }
 
     @PostMapping(path = "/authorization")
-    public AuthenticationResponse authorization(@RequestBody AuthorizationRequest request) {
+    public AuthenticationResponse authorization(@RequestBody @Valid AuthorizationRequest request) {
         return authenticationService.authorization(request);
     }
 
