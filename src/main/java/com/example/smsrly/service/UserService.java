@@ -135,6 +135,12 @@ public class UserService {
         if (user.getId() == realEstate.getUser().getId()) {
             return Response.builder().message("you are owner!!").build();
         }
+
+
+        if (saveRepository.findSave(realEstateId, user.getId()).isPresent()) {
+            return Response.builder().message("request already added").build();
+        }
+
         Save save = new Save(
                 user, realEstate
         );

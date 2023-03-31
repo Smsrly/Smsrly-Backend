@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -19,13 +20,13 @@ public class ResetPasswordService {
 
     public void setExpired(int code, int userId) {
         resetPasswordCodeRepository.updateConfirmedAt(
-                code, userId, true);
+                code, userId, LocalDateTime.now());
     }
 
 
     public void expireAllRequestedCode(int userId) {
         resetPasswordCodeRepository.confirmAllRequestedCode(
-                userId, true);
+                userId, LocalDateTime.now());
     }
 
 

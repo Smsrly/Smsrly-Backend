@@ -36,7 +36,8 @@ public class EmailServices extends SimpleMailMessage {
         } else {
             ResetPasswordCode resetPasswordCode = new ResetPasswordCode(
                     generatedCode,
-                    false,
+                    LocalDateTime.now(),
+                    LocalDateTime.now().plusMinutes(15),
                     user);
             resetPasswordCodeRepository.save(resetPasswordCode);
 

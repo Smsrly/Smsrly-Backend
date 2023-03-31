@@ -173,7 +173,7 @@ public class RealEstateService {
         }
 
         if (requestRepository.findRequest(realEstateId, user.getId()).isPresent()) {
-            return Response.builder().message("Request already added").build();
+            return Response.builder().message("request already added").build();
         }
 
         if (requests.size() != 0 && requests.size() >= 10) {

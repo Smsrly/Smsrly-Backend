@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Random;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -93,6 +94,10 @@ public class AuthenticationService {
             return AuthenticationResponse.builder().message("email not found in DB").build();
         }
 
+        if (!passwordEncoder.matches(request.getPassword(), user.get().getPassword())) {
+            return AuthenticationResponse.builder().message("invalid password, please try again or use forget password to reset password").build();
+        }
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
@@ -153,7 +158,7 @@ public class AuthenticationService {
             return AuthenticationResponse.builder().message("code is invalid").build();
         }
 
-        if (resetPasswordCode.get().getExpired()) {
+        if (resetPasswordCode.get().getExpiredAt().isBefore(LocalDateTime.now()) || resetPasswordCode.get().getConfirmedAt() != null) {
             return AuthenticationResponse.builder().message("code is expired").build();
         }
 
@@ -202,6 +207,7 @@ public class AuthenticationService {
                 .latitude(0.0)
                 .longitude(0.0)
                 .phoneNumber(0)
+                .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                 .enable(true)
                 .build();
         userRepository.save(user);
