@@ -1,7 +1,6 @@
 package com.example.smsrly.service;
 
 import com.example.smsrly.auth.AuthorizationRequest;
-import com.example.smsrly.config.JwtService;
 import com.example.smsrly.auth.AuthenticationRequest;
 import com.example.smsrly.auth.AuthenticationResponse;
 import com.example.smsrly.auth.RegisterRequest;

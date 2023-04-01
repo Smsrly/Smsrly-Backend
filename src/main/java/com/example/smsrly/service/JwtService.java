@@ -1,5 +1,6 @@
-package com.example.smsrly.config;
+package com.example.smsrly.service;
 
+import com.example.smsrly.config.SecretKey;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -17,7 +18,7 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    private static final String SECRET_KEY = "66556A586E3272357538782F413F4428472B4B6250645367566B597033733676";
+    private final SecretKey secretKey = new SecretKey();
 
     public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -37,7 +38,7 @@ public class JwtService {
     }
 
     private Key getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey.getSECRET_KEY());
         return Keys.hmacShaKeyFor(keyBytes);
     }
 

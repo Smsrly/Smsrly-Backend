@@ -1,5 +1,6 @@
 package com.example.smsrly.config;
 
+import com.example.smsrly.service.LogoutService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

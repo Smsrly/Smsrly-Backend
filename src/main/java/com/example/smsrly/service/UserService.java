@@ -1,6 +1,5 @@
 package com.example.smsrly.service;
 
-import com.example.smsrly.config.JwtService;
 import com.example.smsrly.entity.RealEstate;
 import com.example.smsrly.entity.Request;
 import com.example.smsrly.entity.Save;

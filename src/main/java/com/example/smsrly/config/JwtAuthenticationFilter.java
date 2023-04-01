@@ -1,6 +1,7 @@
 package com.example.smsrly.config;
 
 import com.example.smsrly.repository.TokenRepository;
+import com.example.smsrly.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,4 +1,4 @@
-package com.example.smsrly.config;
+package com.example.smsrly.service;
 
 import com.example.smsrly.repository.TokenRepository;
 import jakarta.servlet.http.HttpServletRequest;

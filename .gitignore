@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Secret Key ###
+*/main/java/com/example/smsrly/config/SecretKey.java
+
+### Database Configuration ###
+*/main/resources/application.properties
