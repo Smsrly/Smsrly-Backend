@@ -1,7 +1,9 @@
 package com.example.smsrly.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
@@ -10,6 +12,8 @@ import java.time.LocalDateTime;
 @Table
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class ResetPasswordCode {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,9 +29,6 @@ public class ResetPasswordCode {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
-
-    public ResetPasswordCode() {
-    }
 
     public ResetPasswordCode(int verificationCode, LocalDateTime createdAt, LocalDateTime expiredAt, User user) {
         this.verificationCode = verificationCode;

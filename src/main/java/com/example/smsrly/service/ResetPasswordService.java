@@ -12,6 +12,7 @@ import java.util.Optional;
 @Service
 @AllArgsConstructor
 public class ResetPasswordService {
+
     private final ResetPasswordCodeRepository resetPasswordCodeRepository;
 
     public Optional<ResetPasswordCode> getCode(int code, int userId) {

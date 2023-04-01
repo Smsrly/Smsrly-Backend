@@ -2,7 +2,9 @@ package com.example.smsrly.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
@@ -11,6 +13,8 @@ import java.time.LocalDateTime;
 @Table
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Request {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,10 +30,6 @@ public class Request {
     @ManyToOne
     @JoinColumn(name = "real_estate_id")
     private RealEstate realEstate;
-
-
-    public Request() {
-    }
 
     public Request(LocalDateTime dateCreated, User user, RealEstate realEstate) {
         this.dateCreated = dateCreated;

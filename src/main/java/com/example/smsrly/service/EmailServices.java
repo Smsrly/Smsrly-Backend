@@ -21,7 +21,6 @@ public class EmailServices extends SimpleMailMessage {
 
     private final VerificationEmailCodeService verificationEmailCodeService;
     private final ResetPasswordCodeRepository resetPasswordCodeRepository;
-
     private final JavaMailSender mailSender;
 
     public Response sendEmail(User user, int generatedCode, String type) {

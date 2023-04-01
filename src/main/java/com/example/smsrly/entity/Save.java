@@ -2,15 +2,17 @@ package com.example.smsrly.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Save {
 
     @Id
@@ -25,10 +27,6 @@ public class Save {
     @ManyToOne
     @JoinColumn(name = "real_estate_id")
     private RealEstate realEstate;
-
-    public Save() {
-    }
-
 
     public Save(User user, RealEstate realEstate) {
         this.user = user;

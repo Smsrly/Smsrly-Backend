@@ -6,8 +6,10 @@ import com.example.smsrly.auth.AuthenticationRequest;
 import com.example.smsrly.auth.AuthenticationResponse;
 import com.example.smsrly.auth.RegisterRequest;
 import com.example.smsrly.entity.ResetPasswordCode;
+import com.example.smsrly.entity.Token;
 import com.example.smsrly.entity.VerificationEmailCode;
 import com.example.smsrly.entity.User;
+import com.example.smsrly.repository.TokenRepository;
 import com.example.smsrly.repository.UserRepository;
 import com.example.smsrly.response.Response;
 import lombok.*;
@@ -25,6 +27,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -33,7 +36,7 @@ public class AuthenticationService {
     private final ResetPasswordService resetPasswordService;
     private final UserService userService;
     private final EmailServices emailServices;
-
+    private final TokenRepository tokenRepository;
 
     public int generateCode() {
         Random random = new Random();
@@ -44,6 +47,22 @@ public class AuthenticationService {
         return code;
     }
 
+    private void saveToken(User user, String generateToken) {
+        var token = Token.builder()
+                .token(generateToken)
+                .isExpired(false)
+                .user(user)
+                .build();
+        tokenRepository.save(token);
+    }
+
+    private void expireAllTokens(User user) {
+        var userValidToken = tokenRepository.getAllValidTokens(user.getId());
+        if (userValidToken.isEmpty()) return;
+
+        userValidToken.forEach(token -> token.setExpired(true));
+
+    }
 
     public Response register(RegisterRequest request) {
 
@@ -106,6 +125,8 @@ public class AuthenticationService {
         );
 
         var jwtToken = jwtService.generateToken(user.get());
+        expireAllTokens(user.get());
+        saveToken(user.get(), jwtToken);
         return AuthenticationResponse.builder()
                 .token(jwtToken)
                 .message("log in success")
@@ -139,12 +160,25 @@ public class AuthenticationService {
 
         verificationEmailCodeService.setConfirmedAt(code, user.getId());
         userRepository.enableUser(verificationEmailCode.get().getUser().getEmail());
-
-
+        var jwtToken = jwtService.generateToken(user);
+        expireAllTokens(user);
+        saveToken(user, jwtToken);
         return AuthenticationResponse.builder()
-                .token(jwtService.generateToken(user))
+                .token(jwtToken)
                 .message("activated")
                 .build();
+    }
+
+    public Response resetPassword(String userEmail) {
+        int generatedCode = generateCode();
+        Optional<User> user = userRepository.findUserByEmail(userEmail);
+        if (user.isEmpty()) {
+            return Response.builder().message("email not exists in database").build();
+        }
+
+        resetPasswordService.expireAllRequestedCode(user.get().getId());
+
+        return emailServices.sendEmail(user.get(), generatedCode, "resetPassword");
     }
 
     @Transactional
@@ -163,26 +197,14 @@ public class AuthenticationService {
         }
 
         resetPasswordService.setExpired(code, user.getId());
-
+        var jwtToken = jwtService.generateToken(user);
+        expireAllTokens(user);
+        saveToken(user, jwtToken);
         return AuthenticationResponse.builder()
-                .token(jwtService.generateToken(user))
+                .token(jwtToken)
                 .message("code confirmed")
                 .build();
     }
-
-
-    public Response resetPassword(String userEmail) {
-        int generatedCode = generateCode();
-        Optional<User> user = userRepository.findUserByEmail(userEmail);
-        if (user.isEmpty()) {
-            return Response.builder().message("email not exists in database").build();
-        }
-
-        resetPasswordService.expireAllRequestedCode(user.get().getId());
-
-        return emailServices.sendEmail(user.get(), generatedCode, "resetPassword");
-    }
-
 
     @Transactional
     public Response updateUserPassword(String authHeader, String password) {
@@ -211,7 +233,9 @@ public class AuthenticationService {
                 .enable(true)
                 .build();
         userRepository.save(user);
-
-        return AuthenticationResponse.builder().token(jwtService.generateToken(user)).message("log in successfully").build();
+        var jwtToken = jwtService.generateToken(user);
+        expireAllTokens(user);
+        saveToken(user, jwtToken);
+        return AuthenticationResponse.builder().token(jwtToken).message("log in successfully").build();
     }
 }
