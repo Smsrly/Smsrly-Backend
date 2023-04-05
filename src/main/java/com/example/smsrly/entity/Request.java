@@ -36,4 +36,9 @@ public class Request {
         this.user = user;
         this.realEstate = realEstate;
     }
+
+    public Request(User user, RealEstate realEstate) {
+        this.user = user;
+        this.realEstate = realEstate;
+    }
 }

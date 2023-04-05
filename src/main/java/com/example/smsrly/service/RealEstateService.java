@@ -25,7 +25,6 @@ public class RealEstateService {
 
     private final RealEstateRepository realEstateRepository;
     private final UserRepository userRepository;
-    private final RequestRepository requestRepository;
     private final UserService userService;
     private final ValidatingService validatingService;
 
@@ -222,34 +221,5 @@ public class RealEstateService {
         return Response.builder().message("real estate added").build();
     }
 
-    public Response addRequest(int realEstateId, String authHeader) {
-        User user = userService.getUser(authHeader);
-        RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() -> new IllegalStateException("realEstate with id " + realEstateId + " not exists"));
-        List<Request> requests = requestRepository.findRequestedRealEstateByUserId(user.getId(), LocalDateTime.now(), LocalDateTime.now().minusHours(1));
 
-        if (user.getId() == realEstate.getUser().getId()) {
-            return Response.builder().message("you are owner!!").build();
-        }
-
-        if (requestRepository.findRequest(realEstateId, user.getId()).isPresent()) {
-            return Response.builder().message("request already added").build();
-        }
-
-        if (requests.size() != 0 && requests.size() >= 10) {
-            return Response.builder().message("there are request limit, please try again after 1 hour").build();
-        }
-
-        Request request = new Request(
-                LocalDateTime.now(),
-                user,
-                realEstate
-        );
-
-        requestRepository.save(request);
-        return Response.builder().message("request added").build();
-    }
-
-    public List<Request> getRealEstateRequests(int realEstateId) {
-        return requestRepository.getRequestsByRealEstateId(realEstateId);
-    }
 }

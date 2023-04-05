@@ -27,7 +27,7 @@ public class AuthenticationController {
     private final StorageService storageService;
 
     @PostMapping(path = "/register")
-    public Response register(@RequestBody @Valid RegisterRequest request) throws IOException {
+    public Response register(@RequestBody @Valid RegisterRequest request) {
         return authenticationService.register(request);
     }
 

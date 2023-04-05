@@ -129,63 +129,9 @@ public class UserService {
         return Response.builder().message("updated").build();
     }
 
-    public Response saveRealEstate(String authHeader, int realEstateId) {
-
-        User user = getUser(authHeader);
-
-        RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() ->
-                new IllegalStateException("realEstate with id " + realEstateId + " not exists")
-        );
-
-        if (user.getId() == realEstate.getUser().getId()) {
-            return Response.builder().message("you are owner!!").build();
-        }
-
-
-        if (saveRepository.findSave(realEstateId, user.getId()).isPresent()) {
-            return Response.builder().message("save already added").build();
-        }
-
-        Save save = new Save(
-                user, realEstate
-        );
-        saveRepository.save(save);
-        return Response.builder().message("save added").build();
-    }
-
-    public Response deleteSaveRealEstate(String authHeader, int realEstateId) {
-
-        User user = getUser(authHeader);
-
-        RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() ->
-                new IllegalStateException("realEstate with id " + realEstateId + " not exists")
-        );
-
-        if (saveRepository.findSave(realEstateId, user.getId()).isEmpty()) {
-            return Response.builder().message("the real estate is not already on the saved list").build();
-        }
-
-        Save save = new Save(
-                user, realEstate
-        );
-        saveRepository.delete(save);
-
-        return Response.builder().message("save deleted").build();
-    }
-
-    public Set<Save> getUserSaves(String authHeader) {
-        User user = getUser(authHeader);
-        return user.getSave();
-    }
-
     public List<RealEstate> getUserUploads(String authHeader) {
         User user = getUser(authHeader);
         return user.getUploads();
-    }
-
-    public Set<Request> getUserRequests(String authHeader) {
-        User user = getUser(authHeader);
-        return user.getUserRequests();
     }
 
 }
