@@ -28,6 +28,7 @@ public class UserService {
     private final RealEstateRepository realEstateRepository;
     private final JwtService jwtService;
     private final SaveRepository saveRepository;
+    private final ValidatingService validatingService;
 
     public String extractEmailFromToken(String authHeader) {
         String token = authHeader.substring(7);
@@ -54,7 +55,7 @@ public class UserService {
                 .phoneNumber(user.getPhoneNumber())
                 .latitude(user.getLatitude())
                 .longitude(user.getLongitude())
-                .image(user.getImage())
+                //.image(user.getImageURL())
                 .build();
     }
 
@@ -66,57 +67,63 @@ public class UserService {
     @Transactional
     public Response updateUser(String authHeader, String email, String firstName, String lastName, String password, Optional<Long> phoneNumber, Optional<Double> latitude, Optional<Double> longitude, String image) {
 
-        if (email == null) {
-            return Response.builder().message("User not found").build();
-        }
-
         User user = authHeader != null ? getUser(authHeader) : userRepository.findUserByEmail(email).orElseThrow(() -> new IllegalStateException("User not found"));
 
-
-        if (firstName != null && firstName.length() > 0 && !firstName.equals(user.getFirstName())) {
-            user.setFirstName(firstName);
+        if (firstName != null && !firstName.equals(user.getFirstName())) {
+            String validationMessage = validatingService.validating(firstName, null, null, null, 0, 0, 0, null, 1);
+            if (validationMessage != "validated") {
+                return Response.builder().message(validationMessage).build();
+            }
+            user.setFirstName(firstName.replaceAll("\\s", ""));
         }
 
-        if (lastName != null && lastName.length() > 0 && !lastName.equals(user.getLastName())) {
-            user.setLastName(lastName);
+        if (lastName != null && !lastName.equals(user.getLastName())) {
+            String validationMessage = validatingService.validating(null, lastName, null, null, 0, 0, 0, null, 2);
+            if (validationMessage != "validated") {
+                return Response.builder().message(validationMessage).build();
+            }
+            user.setLastName(lastName.replaceAll("\\s", ""));
         }
 
-//        if (email != null && email.length() > 0 && !email.equals(user.getEmail())) {
-//            Optional<User> userEmail = userRepository.findUserByEmail(email);
-//            if (userEmail.isPresent()) {
-//                throw new IllegalStateException("email is already inserted into DB from another user");
-//            }
-//            user.setEmail(email);
-//        }
+        if (password != null && !passwordEncoder.matches(password, user.getPassword())) {
 
-        if (password != null && password.length() > 0 && !passwordEncoder.matches(password, user.getPassword())) {
+            String validationMessage = validatingService.validating(null, null, null, password, 0, 0, 0, null, 4);
+
+            if (validationMessage != "validated") {
+                return Response.builder().message(validationMessage).build();
+            }
+
             user.setPassword(passwordEncoder.encode(password));
         }
 
         if (phoneNumber.isPresent()) {
             long phoneNum = phoneNumber.get();
 
-            if (phoneNum > 9999 && phoneNum != user.getPhoneNumber()) {
+            String validationMessage = validatingService.validating(null, null, null, null, phoneNum, 0, 0, null, 5);
+            if (validationMessage != "validated") {
+                return Response.builder().message(validationMessage).build();
+            }
+
+            if (phoneNum != user.getPhoneNumber()) {
                 user.setPhoneNumber(phoneNum);
             }
         }
 
-        if (latitude.isPresent()) {
+        if (latitude.isPresent() && longitude.isPresent()) {
             double lat = latitude.get();
-            if (lat > 0 && !(lat == user.getLatitude())) {
-                user.setLongitude(lat);
-            }
-        }
-
-        if (longitude.isPresent()) {
             double lon = longitude.get();
-            if (lon > 0 && !(lon == user.getLongitude())) {
-                user.setLatitude(lon);
-            }
-        }
 
-        if (image != null && image.length() > 0 && !image.equals(user.getImage())) {
-            user.setImage(image);
+            if (!(lat == user.getLatitude()) || !(lon == user.getLongitude())) {
+
+                String validationMessage = validatingService.validating(null, null, null, null, 0, lat, lon, null, 6);
+                if (validationMessage != "validated") {
+                    return Response.builder().message(validationMessage).build();
+                }
+
+                user.setLatitude(lat);
+                user.setLongitude(lon);
+            }
+
         }
 
         return Response.builder().message("updated").build();
@@ -136,7 +143,7 @@ public class UserService {
 
 
         if (saveRepository.findSave(realEstateId, user.getId()).isPresent()) {
-            return Response.builder().message("request already added").build();
+            return Response.builder().message("save already added").build();
         }
 
         Save save = new Save(
@@ -153,6 +160,10 @@ public class UserService {
         RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() ->
                 new IllegalStateException("realEstate with id " + realEstateId + " not exists")
         );
+
+        if (saveRepository.findSave(realEstateId, user.getId()).isEmpty()) {
+            return Response.builder().message("the real estate is not already on the saved list").build();
+        }
 
         Save save = new Save(
                 user, realEstate
@@ -176,4 +187,5 @@ public class UserService {
         User user = getUser(authHeader);
         return user.getUserRequests();
     }
+
 }

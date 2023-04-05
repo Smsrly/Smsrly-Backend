@@ -27,6 +27,8 @@ public class RealEstateService {
     private final UserRepository userRepository;
     private final RequestRepository requestRepository;
     private final UserService userService;
+    private final ValidatingService validatingService;
+
 
     public List<RealEstateResponse> getRealEstates(String authHeader) {
 
@@ -50,7 +52,6 @@ public class RealEstateService {
                 .bathroomNumber(realEstate.getBathroomNumber())
                 .description(realEstate.getDescription())
                 .floorNumber(realEstate.getFloorNumber())
-                .image(realEstate.getImage())
                 .area(realEstate.getArea())
                 .price(realEstate.getPrice())
                 .longitude(realEstate.getLongitude())
@@ -59,7 +60,8 @@ public class RealEstateService {
                 .ownerInfo(OwnerInfo.builder()
                         .Name(realEstate.getUser().getFirstName() + ' ' + realEstate.getUser().getLastName())
                         .phoneNumber(realEstate.getUser().getPhoneNumber())
-                        .image(realEstate.getUser().getImage()).build()
+                        //.image(realEstate.getUser().getImage())
+                        .build()
                 ).build();
     }
 
@@ -83,78 +85,135 @@ public class RealEstateService {
         );
 
         if (user.getId() != realEstate.getUser().getId()) {
-            return Response.builder().message("owner only have access to delete real estate").build();
+            return Response.builder().message("owner only have access to update real estate").build();
         }
 
-        if (title != null && title.length() > 0 && !title.equals(realEstate.getTitle())) {
+
+        if (title != null && !title.equals(realEstate.getTitle())) {
+            String validationMessage = validatingService.validatingRealEstate(title.replaceAll("\\s", ""), null, 0, 0, 0, 0, 0, 1);
+            if (validationMessage != "validated") {
+                return Response.builder().message(validationMessage).build();
+            }
             realEstate.setTitle(title);
         }
 
-        if (description != null && description.length() > 0 && !description.equals(realEstate.getDescription())) {
+
+        if (description != null && !description.equals(realEstate.getDescription())) {
+            String validationMessage = validatingService.validatingRealEstate(null, description.replaceAll("\\s", ""), 0, 0, 0, 0, 0, 2);
+            if (validationMessage != "validated") {
+                return Response.builder().message(validationMessage).build();
+            }
             realEstate.setDescription(description);
         }
 
+
         if (area.isPresent()) {
             double realEstateArea = area.get();
-            if (realEstateArea > 0 && !(realEstateArea == realEstate.getArea())) {
+
+            if (!(realEstateArea == realEstate.getArea())) {
+                String validationMessage = validatingService.validatingRealEstate(null, null, realEstateArea, 0, 0, 0, 0, 3);
+                if (validationMessage != "validated") {
+                    return Response.builder().message(validationMessage).build();
+                }
                 realEstate.setArea(realEstateArea);
             }
         }
 
+
         if (floorNumber.isPresent()) {
             int realEstateFloorNumber = floorNumber.get();
-            if (realEstateFloorNumber > 0 && !(realEstateFloorNumber == realEstate.getFloorNumber())) {
+
+            if (!(realEstateFloorNumber == realEstate.getFloorNumber())) {
+
+                String validationMessage = validatingService.validatingRealEstate(null, null, 0, realEstateFloorNumber, 0, 0, 0, 4);
+                if (validationMessage != "validated") {
+                    return Response.builder().message(validationMessage).build();
+                }
+
                 realEstate.setFloorNumber(realEstateFloorNumber);
             }
         }
 
+
         if (bathroomNumber.isPresent()) {
             int realEstateBathroomNumber = bathroomNumber.get();
-            if (realEstateBathroomNumber > 0 && !(realEstateBathroomNumber == realEstate.getBathroomNumber())) {
+            if (!(realEstateBathroomNumber == realEstate.getBathroomNumber())) {
+
+                String validationMessage = validatingService.validatingRealEstate(null, null, 0, 0, realEstateBathroomNumber, 0, 0, 5);
+                if (validationMessage != "validated") {
+                    return Response.builder().message(validationMessage).build();
+                }
+
                 realEstate.setBathroomNumber(realEstateBathroomNumber);
             }
         }
 
+
         if (roomNumber.isPresent()) {
             int realEstateRoomNumber = roomNumber.get();
-            if (realEstateRoomNumber > 0 && !(realEstateRoomNumber == realEstate.getRoomNumber())) {
+            if (!(realEstateRoomNumber == realEstate.getRoomNumber())) {
+                String validationMessage = validatingService.validatingRealEstate(null, null, 0, 0, 0, realEstateRoomNumber, 0, 6);
+                if (validationMessage != "validated") {
+                    return Response.builder().message(validationMessage).build();
+                }
                 realEstate.setRoomNumber(realEstateRoomNumber);
             }
         }
 
+
         if (price.isPresent()) {
             double realEstatePrice = price.get();
-            if (realEstatePrice > 0 && !(realEstatePrice == realEstate.getPrice())) {
+            if (!(realEstatePrice == realEstate.getPrice())) {
+                String validationMessage = validatingService.validatingRealEstate(null, null, 0, 0, 0, 0, realEstatePrice, 7);
+                if (validationMessage != "validated") {
+                    return Response.builder().message(validationMessage).build();
+                }
                 realEstate.setPrice(realEstatePrice);
             }
         }
 
-        if (latitude.isPresent()) {
+        if (latitude.isPresent() && longitude.isPresent()) {
             double realEstateLatitude = latitude.get();
-            if (realEstateLatitude > 0 && !(realEstateLatitude == realEstate.getLatitude())) {
-                realEstate.setLatitude(realEstateLatitude);
-            }
-        }
-
-        if (longitude.isPresent()) {
             double realEstateLongitude = longitude.get();
-            if (realEstateLongitude > 0 && !(realEstateLongitude == realEstate.getLongitude())) {
+
+            if (!(realEstateLatitude == realEstate.getLatitude()) || !(realEstateLongitude == realEstate.getLongitude())) {
+
+                String validationMessage = validatingService.validating(null, null, null, null, 0, realEstateLatitude, realEstateLongitude, null, 6);
+                if (validationMessage != "validated") {
+                    return Response.builder().message(validationMessage).build();
+                }
+
+                realEstate.setLatitude(realEstateLatitude);
                 realEstate.setLongitude(realEstateLongitude);
             }
         }
 
-        if (image != null && image.length() > 0 && !image.equals(realEstate.getImage())) {
-            realEstate.setImage(image);
-        }
         return Response.builder().message("updated").build();
     }
 
     public Response addRealEstate(RealEstate realEstate, String authHeader) {
         User user = userService.getUser(authHeader);
 
+        Optional<RealEstate> duplicatedRealEstate = realEstateRepository.getRealEstatesWithSameDetails(realEstate.getArea(), realEstate.getBathroomNumber(), realEstate.getDescription(), realEstate.getLatitude(), realEstate.getLongitude(), realEstate.getPrice(), realEstate.getRoomNumber(), realEstate.getTitle(), userService.getUserId(authHeader));
+
+        if (duplicatedRealEstate.isPresent()) {
+            return Response.builder().message("this is duplicated real estate and that not allowed").build();
+        }
+
         List<RealEstate> realEstateList = realEstateRepository.findUploadedRealEstateByUserId(user.getId(), LocalDateTime.now(), LocalDateTime.now().minusHours(1));
+
         if (realEstateList.size() != 0 && realEstateList.size() >= 10) {
             return Response.builder().message("there are upload limit, please try again after 1 hour").build();
+        }
+
+        String validationMessage = validatingService.validatingRealEstate(realEstate.getTitle().replaceAll("\\s", ""), realEstate.getDescription().replaceAll("\\s", ""), realEstate.getArea(), realEstate.getFloorNumber(), realEstate.getBathroomNumber(), realEstate.getRoomNumber(), realEstate.getPrice(), 0);
+        if (validationMessage != "validated") {
+            return Response.builder().message(validationMessage).build();
+        }
+
+        String locationValidationMessage = validatingService.validating(null, null, null, null, 0, realEstate.getLatitude(), realEstate.getLongitude(), null, 6);
+        if (locationValidationMessage != "validated") {
+            return Response.builder().message(locationValidationMessage).build();
         }
 
         realEstate.setUser(user);

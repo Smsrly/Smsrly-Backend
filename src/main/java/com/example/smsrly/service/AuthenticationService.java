@@ -36,6 +36,7 @@ public class AuthenticationService {
     private final UserService userService;
     private final EmailServices emailServices;
     private final TokenRepository tokenRepository;
+    private final ValidatingService validatingService;
 
     public int generateCode() {
         Random random = new Random();
@@ -63,6 +64,7 @@ public class AuthenticationService {
 
     }
 
+
     public Response register(RegisterRequest request) {
 
         int generatedCode = generateCode();
@@ -71,17 +73,24 @@ public class AuthenticationService {
 
         if (userEmail.isPresent() && userEmail.get().isEnabled()) {
             return Response.builder().message("email is already inserted into DB").build();
-        } else if (userEmail.isPresent() && !userEmail.get().isEnabled() && verificationEmailCodeService.checkIfCodeExpiredOrNot(userEmail.get().getId()).isEmpty()) {
+        }
+
+        String validationMessage = validatingService.validating(request.getFirstname(), request.getLastname(), request.getEmail(), request.getPassword(), request.getPhoneNumber(), request.getLatitude(), request.getLongitude(), null, 0);
+        if (validationMessage != "validated") {
+            return Response.builder().message(validationMessage).build();
+        }
+
+        if (userEmail.isPresent() && !userEmail.get().isEnabled() && verificationEmailCodeService.checkIfCodeExpiredOrNot(userEmail.get().getId()).isEmpty()) {
 
             userService.updateUser(null,
                     userEmail.get().getEmail(),
-                    request.getFirstname(),
-                    request.getLastname(),
+                    request.getFirstname().replaceAll("\\s", ""),
+                    request.getLastname().replaceAll("\\s", ""),
                     request.getPassword(),
                     Optional.of(request.getPhoneNumber()),
                     Optional.of(request.getLatitude()),
                     Optional.of(request.getLongitude()),
-                    request.getImage());
+                    null);
 
             return emailServices.sendEmail(userEmail.get(), generatedCode, "confirmationEmail");
         } else if (userEmail.isPresent() && !userEmail.get().isEnabled() && verificationEmailCodeService.checkIfCodeExpiredOrNot(userEmail.get().getId()).isPresent()) {
@@ -89,14 +98,13 @@ public class AuthenticationService {
         }
 
         var user = User.builder()
-                .firstName(request.getFirstname())
-                .lastName(request.getLastname())
+                .firstName(request.getFirstname().replaceAll("\\s", ""))
+                .lastName(request.getLastname().replaceAll("\\s", ""))
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .phoneNumber(request.getPhoneNumber())
                 .longitude(request.getLongitude())
                 .latitude(request.getLatitude())
-                .image(request.getImage())
                 .enable(false)
                 .build();
         userRepository.save(user);
@@ -208,11 +216,26 @@ public class AuthenticationService {
     @Transactional
     public Response updateUserPassword(String authHeader, String password) {
         User user = userService.getUser(authHeader);
+
+        String validationMessage = validatingService.validating(null, null, null, password, 0, 0, 0, null, 4);
+        if (validationMessage != "validated") {
+            return Response.builder().message(validationMessage).build();
+        }
+
         user.setPassword(passwordEncoder.encode(password));
         return Response.builder().message("password updated").build();
     }
 
     public AuthenticationResponse authorization(AuthorizationRequest request) {
+
+        if (!request.getEmail().contains("@gmail.com")) {
+            return AuthenticationResponse.builder().message("Email is not valid").build();
+        }
+
+        String validationMessage = validatingService.validating(null, null, null, null, 0, 0, 0, request.getImageURL(), 6);
+        if (validationMessage != "validated") {
+            return AuthenticationResponse.builder().message(validationMessage).build();
+        }
 
         Optional<User> userEmail = userRepository.findUserByEmail(request.getEmail());
 
@@ -224,13 +247,14 @@ public class AuthenticationService {
                 .firstName(request.getFirstname())
                 .lastName(request.getLastname())
                 .email(request.getEmail())
-                .image(request.getImage())
+                .imageURL(request.getImageURL())
                 .latitude(0.0)
                 .longitude(0.0)
                 .phoneNumber(0)
                 .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                 .enable(true)
                 .build();
+
         userRepository.save(user);
         var jwtToken = jwtService.generateToken(user);
         expireAllTokens(user);

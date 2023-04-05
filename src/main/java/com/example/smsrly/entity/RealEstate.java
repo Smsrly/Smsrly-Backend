@@ -4,8 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,16 +25,12 @@ public class RealEstate {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-
     @Column(nullable = false)
-    @NotEmpty(message = "title must be not empty")
-    @NotNull(message = "title must be not null")
+    @NotBlank(message = "title must be not blank")
     private String title;
     @Column(nullable = false)
-    @NotEmpty(message = "description must be not empty")
-    @NotNull(message = "description must be not null")
+    @NotBlank(message = "description must be not blank")
     private String description;
-
     @Column(nullable = false)
     private double area;
 
@@ -54,9 +49,7 @@ public class RealEstate {
     @Column(nullable = false)
     private double longitude;
 
-    @Column(columnDefinition = "LONGTEXT")
-    private String image;
-
+    @JsonIgnore
     @Column(name = "date_uploaded", columnDefinition = "DATETIME", nullable = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime dateUploaded;

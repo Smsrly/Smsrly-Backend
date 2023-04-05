@@ -45,7 +45,7 @@ public class User implements UserDetails {
     private double longitude;
 
     @Column(columnDefinition = "LONGTEXT")
-    private String image;
+    private String imageURL;
     @JsonIgnore
     private Boolean enable;
     @JsonIgnore

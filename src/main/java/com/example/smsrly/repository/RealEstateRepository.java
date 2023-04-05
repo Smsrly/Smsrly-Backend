@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface RealEstateRepository extends JpaRepository<RealEstate, Integer> {
@@ -16,5 +17,8 @@ public interface RealEstateRepository extends JpaRepository<RealEstate, Integer>
 
     @Query(value = "SELECT * FROM real_estate WHERE owner_id !=:userId ORDER BY ((latitude - :userLatitude) * (latitude - :userLatitude)) + ((longitude - :userLongitude) * (longitude - :userLongitude)) ASC", nativeQuery = true)
     List<RealEstate> getRealEstateNearestToUser(double userLatitude, double userLongitude, int userId);
+
+    @Query(value = "SELECT * FROM real_estate where area = :area and bathroom_number = :bathroomNumber and description = :description and latitude = :latitude and longitude = :longitude and price = :price and room_number = :roomNumber and title = :title and owner_id = :ownerId", nativeQuery = true)
+    Optional<RealEstate> getRealEstatesWithSameDetails(double area, int bathroomNumber, String description, double latitude, double longitude, double price, int roomNumber, String title, int ownerId);
 
 }

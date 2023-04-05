@@ -21,7 +21,6 @@ public class RealEstateResponse {
     private double price;
     private double latitude;
     private double longitude;
-    private String image;
     private OwnerInfo ownerInfo;
 
 }

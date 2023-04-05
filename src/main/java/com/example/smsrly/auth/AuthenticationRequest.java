@@ -1,9 +1,6 @@
 package com.example.smsrly.auth;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,11 +13,9 @@ import lombok.NoArgsConstructor;
 public class AuthenticationRequest {
 
     @Email(message = "email must be like test@test.com")
-    @NotEmpty(message = "email must be not empty")
-    @NotNull(message = "email must be not null")
+    @NotBlank(message = "email must be not blank")
     private String email;
     @Size(min = 8, message = "password should have at least 8 characters")
-    @NotEmpty(message = "password must be not empty")
-    @NotNull(message = "password must be not null")
+    @NotBlank(message = "password must be not blank")
     private String password;
 }
