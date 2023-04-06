@@ -6,9 +6,6 @@ import com.example.smsrly.response.UserResponse;
 import com.example.smsrly.service.StorageService;
 import com.example.smsrly.service.UserService;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -21,7 +18,6 @@ import java.util.Optional;
 public class UserController {
 
     private final UserService userService;
-    private final StorageService storageService;
 
     @GetMapping
     public UserResponse getUser(@RequestHeader("Authorization") String authHeader) {
@@ -51,11 +47,4 @@ public class UserController {
         return userService.getUserUploads(authHeader);
     }
 
-    @GetMapping("/image")
-    public ResponseEntity<?> downloadImageFromFileSystem(@RequestHeader("Authorization") String authHeader) throws IOException {
-        byte[] imageData = storageService.downloadImage(authHeader);
-        return ResponseEntity.status(HttpStatus.OK)
-                .contentType(MediaType.valueOf("image/png"))
-                .body(imageData);
-    }
 }

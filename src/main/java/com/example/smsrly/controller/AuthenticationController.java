@@ -31,10 +31,10 @@ public class AuthenticationController {
         return authenticationService.register(request);
     }
 
-    @PostMapping(path = "/image")
-    public Response uploadImageToFIleSystem(@RequestParam("image") MultipartFile file, @RequestParam("email") String email) throws IOException {
-        return storageService.uploadImage(file, email);
-    }
+//    @PostMapping(path = "/image")
+//    public Response uploadImageToFIleSystem(@RequestParam("image") MultipartFile file, @RequestParam("email") String email) throws IOException {
+//        return storageService.uploadImage(file, email);
+//    }
 
 //    @GetMapping("/image/{fileName}")
 //    public ResponseEntity<?> downloadImageFromFileSystem(@PathVariable("fileName") String fileName) throws IOException {

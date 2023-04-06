@@ -1,11 +1,7 @@
 package com.example.smsrly.service;
 
 import com.example.smsrly.entity.RealEstate;
-import com.example.smsrly.entity.Request;
-import com.example.smsrly.entity.Save;
 import com.example.smsrly.entity.User;
-import com.example.smsrly.repository.RealEstateRepository;
-import com.example.smsrly.repository.SaveRepository;
 import com.example.smsrly.repository.UserRepository;
 import com.example.smsrly.response.Response;
 import com.example.smsrly.response.UserResponse;
@@ -16,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 
 @Service
@@ -53,7 +48,7 @@ public class UserService {
                 .phoneNumber(user.getPhoneNumber())
                 .latitude(user.getLatitude())
                 .longitude(user.getLongitude())
-                //.image(user.getImageURL())
+                .imageURL(user.getImageURL())
                 .build();
     }
 

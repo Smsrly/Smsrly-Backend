@@ -16,5 +16,5 @@ public class UserResponse {
     private long phoneNumber;
     private double latitude;
     private double longitude;
-    private String image;
+    private String imageURL;
 }
