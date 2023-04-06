@@ -25,9 +25,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final RealEstateRepository realEstateRepository;
     private final JwtService jwtService;
-    private final SaveRepository saveRepository;
     private final ValidatingService validatingService;
 
     public String extractEmailFromToken(String authHeader) {

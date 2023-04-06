@@ -3,10 +3,15 @@ package com.example.smsrly.controller;
 import com.example.smsrly.entity.RealEstate;
 import com.example.smsrly.response.Response;
 import com.example.smsrly.response.UserResponse;
+import com.example.smsrly.service.StorageService;
 import com.example.smsrly.service.UserService;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,16 +20,17 @@ import java.util.Optional;
 @AllArgsConstructor
 public class UserController {
 
-    private final UserService service;
+    private final UserService userService;
+    private final StorageService storageService;
 
     @GetMapping
     public UserResponse getUser(@RequestHeader("Authorization") String authHeader) {
-        return service.getUserInfo(authHeader);
+        return userService.getUserInfo(authHeader);
     }
 
     @DeleteMapping
     public Response deleteUser(@RequestHeader("Authorization") String authHeader) {
-        return service.deleteUser(authHeader);
+        return userService.deleteUser(authHeader);
     }
 
     @PutMapping
@@ -36,14 +42,20 @@ public class UserController {
                                @RequestParam(required = false) Optional<Double> latitude,
                                @RequestParam(required = false) Optional<Double> longitude,
                                @RequestParam(required = false) String image) {
-        return service.updateUser(authHeader, null, firstName, lastName, password, phoneNumber, latitude, longitude, image);
+        return userService.updateUser(authHeader, null, firstName, lastName, password, phoneNumber, latitude, longitude, image);
     }
 
 
     @GetMapping(path = "/uploads")
     public List<RealEstate> getUserUploads(@RequestHeader("Authorization") String authHeader) {
-        return service.getUserUploads(authHeader);
+        return userService.getUserUploads(authHeader);
     }
 
-
+    @GetMapping("/image")
+    public ResponseEntity<?> downloadImageFromFileSystem(@RequestHeader("Authorization") String authHeader) throws IOException {
+        byte[] imageData = storageService.downloadImage(authHeader);
+        return ResponseEntity.status(HttpStatus.OK)
+                .contentType(MediaType.valueOf("image/png"))
+                .body(imageData);
+    }
 }

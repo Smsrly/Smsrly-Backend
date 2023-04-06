@@ -32,19 +32,17 @@ public class AuthenticationController {
     }
 
     @PostMapping(path = "/image")
-    public ResponseEntity<?> uploadImageToFIleSystem(@RequestParam("image") MultipartFile file, @RequestParam("email") String email) throws IOException {
-        String uploadImage = storageService.uploadImage(file, email);
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(uploadImage);
+    public Response uploadImageToFIleSystem(@RequestParam("image") MultipartFile file, @RequestParam("email") String email) throws IOException {
+        return storageService.uploadImage(file, email);
     }
 
-    @GetMapping("/image/{fileName}")
-    public ResponseEntity<?> downloadImageFromFileSystem(@PathVariable String fileName) throws IOException {
-        byte[] imageData = storageService.downloadImage(fileName);
-        return ResponseEntity.status(HttpStatus.OK)
-                .contentType(MediaType.valueOf("image/png"))
-                .body(imageData);
-    }
+//    @GetMapping("/image/{fileName}")
+//    public ResponseEntity<?> downloadImageFromFileSystem(@PathVariable("fileName") String fileName) throws IOException {
+//        byte[] imageData = storageService.downloadImage(fileName);
+//        return ResponseEntity.status(HttpStatus.OK)
+//                .contentType(MediaType.valueOf("image/png"))
+//                .body(imageData);
+//    }
 
     @PostMapping(path = "/authentication")
     public AuthenticationResponse authenticate(@RequestBody @Valid AuthenticationRequest request) {

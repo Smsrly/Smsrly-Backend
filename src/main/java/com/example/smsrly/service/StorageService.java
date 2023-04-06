@@ -3,6 +3,7 @@ package com.example.smsrly.service;
 import com.example.smsrly.entity.Storage;
 import com.example.smsrly.repository.UserRepository;
 import com.example.smsrly.repository.StorageRepository;
+import com.example.smsrly.response.Response;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,26 +32,30 @@ public class StorageService {
         return userName;
     }
 
-    public String uploadImage(MultipartFile file, String email) throws IOException {
+    public Response uploadImage(MultipartFile file, String email) throws IOException {
+
+        userRepository.findUserByEmail(email).orElseThrow(() -> new IllegalStateException("user with email " + email + " not exists"));
 
         String fileExtension = com.google.common.io.Files.getFileExtension(Objects.requireNonNull(file.getOriginalFilename()));
-
         String renameFile = extractUserNameFromEmail(email) + '.' + fileExtension;
         String filePath = USER_FOLDER_PATH + renameFile;
-        System.out.println();
-        if (storageRepository.findImageByName(renameFile).isPresent()) return "image is already inserted";
+        String fileName = extractUserNameFromEmail(email);
+
+        if (storageRepository.findImageByName(fileName).isPresent())
+            return Response.builder().message("image is already uploaded").build();
 
         storageRepository.save(Storage.builder()
-                .name(renameFile)
+                .name(fileName)
                 .type(file.getContentType())
                 .path(filePath).build());
 
         file.transferTo(new File(filePath));
 
-        return filePath;
+        return Response.builder().message("image uploaded").build();
     }
 
-    public byte[] downloadImage(String fileName) throws IOException {
+    public byte[] downloadImage(String authHeader) throws IOException {
+        String fileName = extractUserNameFromEmail(userService.getUser(authHeader).getEmail());
         Storage fileData = storageRepository.findImageByName(fileName).orElseThrow(() -> new IllegalArgumentException("image with name " + fileName + " not found"));
         String filePath = fileData.getPath();
         return Files.readAllBytes(new File(filePath).toPath());
