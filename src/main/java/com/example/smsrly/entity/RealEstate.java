@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -33,7 +34,6 @@ public class RealEstate {
     private String description;
     @Column(nullable = false)
     private double area;
-
     @Column(name = "floor_number", nullable = false)
     private int floorNumber;
     @Column(name = "bathroom_number", nullable = false)
@@ -42,12 +42,12 @@ public class RealEstate {
     private int roomNumber;
     @Column(nullable = false)
     private double price;
-
     @Column(nullable = false)
     private double latitude;
-
     @Column(nullable = false)
     private double longitude;
+    @OneToMany(mappedBy = "realEstate", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<RealEstateImages> realEstateImages;
 
     @JsonIgnore
     @Column(name = "date_uploaded", columnDefinition = "DATETIME", nullable = false)

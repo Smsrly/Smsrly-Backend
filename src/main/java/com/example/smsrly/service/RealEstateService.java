@@ -44,7 +44,8 @@ public class RealEstateService {
     }
 
     public RealEstateResponse getRealEstate(int realEstateId) {
-        RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow();
+        RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() ->
+                new IllegalStateException("realEstate with id " + realEstateId + " not exists"));
         return RealEstateResponse.builder()
                 .id(realEstate.getId())
                 .title(realEstate.getTitle())
@@ -56,10 +57,11 @@ public class RealEstateService {
                 .longitude(realEstate.getLongitude())
                 .latitude(realEstate.getLatitude())
                 .roomNumber(realEstate.getRoomNumber())
+                .realEstateImages(realEstate.getRealEstateImages())
                 .ownerInfo(OwnerInfo.builder()
                         .Name(realEstate.getUser().getFirstName() + ' ' + realEstate.getUser().getLastName())
                         .phoneNumber(realEstate.getUser().getPhoneNumber())
-                        //.image(realEstate.getUser().getImage())
+                        .image(realEstate.getUser().getImageURL())
                         .build()
                 ).build();
     }
@@ -218,7 +220,7 @@ public class RealEstateService {
         realEstate.setUser(user);
         realEstate.setDateUploaded(LocalDateTime.now());
         realEstateRepository.save(realEstate);
-        return Response.builder().message("real estate added").build();
+        return Response.builder().message("real estate uploaded with id " + realEstate.getId()).build();
     }
 
 

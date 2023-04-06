@@ -1,7 +1,11 @@
 package com.example.smsrly.service;
 
+import com.example.smsrly.entity.RealEstate;
+import com.example.smsrly.entity.RealEstateImages;
 import com.example.smsrly.entity.Storage;
 import com.example.smsrly.entity.User;
+import com.example.smsrly.repository.RealEstateImagesRepository;
+import com.example.smsrly.repository.RealEstateRepository;
 import com.example.smsrly.repository.UserRepository;
 import com.example.smsrly.repository.StorageRepository;
 import com.example.smsrly.response.Response;
@@ -19,9 +23,12 @@ import java.util.Objects;
 public class StorageService {
 
     private static final String USER_FOLDER_PATH = "C:\\Users\\Youssef\\IdeaProjects\\smsrly\\src\\main\\Images\\User\\";
-    private static final String REAL_ESTATE_FOLDER_PATH = "C:\\Users\\Youssef\\IdeaProjects\\smsrly\\src\\main\\Images\\User\\";
+    private static final String REAL_ESTATE_FOLDER_PATH = "C:\\Users\\Youssef\\IdeaProjects\\smsrly\\src\\main\\Images\\RealEstate\\";
     private final StorageRepository storageRepository;
     private final UserRepository userRepository;
+    private final RealEstateRepository realEstateRepository;
+    private final RealEstateImagesRepository realEstateImagesRepository;
+    private static final String IP = "localhost"; // add your IP here
 
     public static String extractUserNameFromEmail(String email) {
         String userName = "";
@@ -51,6 +58,32 @@ public class StorageService {
         user.setImageURL("http://localhost:8080/image/" + renameFile);
 
         userRepository.save(user);
+
+        file.transferTo(new File(filePath));
+
+        return Response.builder().message("image uploaded").build();
+    }
+
+
+    public Response uploadImage(MultipartFile file, int realEstateId) throws IOException {
+
+        RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() -> new IllegalStateException("real estate with id " + realEstateId + " not exists"));
+        int numberOfUploadedRealEstates = realEstateImagesRepository.findByRealEstateId(realEstateId).size();
+
+        String fileExtension = com.google.common.io.Files.getFileExtension(Objects.requireNonNull(file.getOriginalFilename()));
+
+        String renameFile = extractUserNameFromEmail(realEstate.getUser().getEmail()) + '_' + realEstateId + '_' + realEstate.getTitle().replaceAll("\\s", "_") + '_' + ++numberOfUploadedRealEstates + '.' + fileExtension;
+        String filePath = REAL_ESTATE_FOLDER_PATH + renameFile;
+
+        if (storageRepository.findImageByName(renameFile).isPresent())
+            return Response.builder().message("image is already uploaded").build();
+
+        storageRepository.save(Storage.builder()
+                .name(renameFile)
+                .type(file.getContentType())
+                .path(filePath).build());
+
+        realEstateImagesRepository.save(new RealEstateImages("http://" + IP + ":8080/image/" + renameFile, realEstate));
 
         file.transferTo(new File(filePath));
 

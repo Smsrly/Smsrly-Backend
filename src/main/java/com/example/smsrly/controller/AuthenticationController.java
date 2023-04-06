@@ -6,16 +6,9 @@ import com.example.smsrly.auth.AuthorizationRequest;
 import com.example.smsrly.auth.RegisterRequest;
 import com.example.smsrly.response.Response;
 import com.example.smsrly.service.AuthenticationService;
-import com.example.smsrly.service.StorageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
 
 
 @RestController
@@ -24,25 +17,12 @@ import java.io.IOException;
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
-    private final StorageService storageService;
 
     @PostMapping(path = "/register")
     public Response register(@RequestBody @Valid RegisterRequest request) {
         return authenticationService.register(request);
     }
 
-//    @PostMapping(path = "/image")
-//    public Response uploadImageToFIleSystem(@RequestParam("image") MultipartFile file, @RequestParam("email") String email) throws IOException {
-//        return storageService.uploadImage(file, email);
-//    }
-
-//    @GetMapping("/image/{fileName}")
-//    public ResponseEntity<?> downloadImageFromFileSystem(@PathVariable("fileName") String fileName) throws IOException {
-//        byte[] imageData = storageService.downloadImage(fileName);
-//        return ResponseEntity.status(HttpStatus.OK)
-//                .contentType(MediaType.valueOf("image/png"))
-//                .body(imageData);
-//    }
 
     @PostMapping(path = "/authentication")
     public AuthenticationResponse authenticate(@RequestBody @Valid AuthenticationRequest request) {

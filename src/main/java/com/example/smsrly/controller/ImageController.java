@@ -1,7 +1,6 @@
 package com.example.smsrly.controller;
 
 
-import com.example.smsrly.entity.Storage;
 import com.example.smsrly.response.Response;
 import com.example.smsrly.service.StorageService;
 import lombok.RequiredArgsConstructor;
@@ -21,12 +20,17 @@ public class ImageController {
     private final StorageService storageService;
 
     @PostMapping
-    public Response uploadImageToFIleSystem(@RequestParam("image") MultipartFile file, @RequestParam("email") String email) throws IOException {
+    public Response upload(@RequestParam("image") MultipartFile file, @RequestParam(value = "email") String email) throws IOException {
         return storageService.uploadImage(file, email);
     }
 
+    @PostMapping(path = "realEstate")
+    public Response upload(@RequestParam("image") MultipartFile file, @RequestParam(value = "RealEstateId") int realEstateId) throws IOException {
+        return storageService.uploadImage(file, realEstateId);
+    }
+
     @GetMapping(path = "{fileName}")
-    public ResponseEntity<?> downloadImageFromFileSystem(@PathVariable("fileName") String fileName) throws IOException {
+    public ResponseEntity<?> download(@PathVariable("fileName") String fileName) throws IOException {
         byte[] imageData = storageService.downloadImage(fileName);
         return ResponseEntity.status(HttpStatus.OK)
                 .contentType(MediaType.valueOf("image/png"))
