@@ -20,6 +20,9 @@ public class RealEstateImages {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonIgnore
     private int id;
+    @JsonIgnore
+    @Column(nullable = false, unique = true)
+    private String name;
     @Column(columnDefinition = "LONGTEXT")
     String realEstateImageURL;
     @JsonIgnore
@@ -27,7 +30,8 @@ public class RealEstateImages {
     @JoinColumn(name = "real_estate_id")
     private RealEstate realEstate;
 
-    public RealEstateImages(String realEstateImageURL, RealEstate realEstate) {
+    public RealEstateImages(String name, String realEstateImageURL, RealEstate realEstate) {
+        this.name = name;
         this.realEstateImageURL = realEstateImageURL;
         this.realEstate = realEstate;
     }

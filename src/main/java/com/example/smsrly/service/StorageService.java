@@ -22,8 +22,8 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class StorageService {
 
-    private static final String USER_FOLDER_PATH = "C:\\Users\\Youssef\\IdeaProjects\\smsrly\\src\\main\\Images\\User\\";
-    private static final String REAL_ESTATE_FOLDER_PATH = "C:\\Users\\Youssef\\IdeaProjects\\smsrly\\src\\main\\Images\\RealEstate\\";
+    private static final String USER_FOLDER_PATH = "C:\\Users\\Youssef\\IdeaProjects\\smsrly\\src\\main\\Images\\User\\"; // change you folder path
+    private static final String REAL_ESTATE_FOLDER_PATH = "C:\\Users\\Youssef\\IdeaProjects\\smsrly\\src\\main\\Images\\RealEstate\\"; // change you folder path
     private final StorageRepository storageRepository;
     private final UserRepository userRepository;
     private final RealEstateRepository realEstateRepository;
@@ -55,7 +55,7 @@ public class StorageService {
                 .type(file.getContentType())
                 .path(filePath).build());
 
-        user.setImageURL("http://localhost:8080/image/" + renameFile);
+        user.setImageURL("http://" + IP + ":8080/image/" + renameFile);
 
         userRepository.save(user);
 
@@ -65,35 +65,54 @@ public class StorageService {
     }
 
 
-    public Response uploadImage(MultipartFile file, int realEstateId) throws IOException {
+    public Response uploadImage(MultipartFile[] files, int realEstateId) throws IOException {
 
         RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() -> new IllegalStateException("real estate with id " + realEstateId + " not exists"));
-        int numberOfUploadedRealEstates = realEstateImagesRepository.findByRealEstateId(realEstateId).size();
 
-        String fileExtension = com.google.common.io.Files.getFileExtension(Objects.requireNonNull(file.getOriginalFilename()));
+        for (MultipartFile file : files) {
 
-        String renameFile = extractUserNameFromEmail(realEstate.getUser().getEmail()) + '_' + realEstateId + '_' + realEstate.getTitle().replaceAll("\\s", "_") + '_' + ++numberOfUploadedRealEstates + '.' + fileExtension;
-        String filePath = REAL_ESTATE_FOLDER_PATH + renameFile;
+            int numberOfUploadedRealEstates = realEstateImagesRepository.findByRealEstateId(realEstateId).size();
+            String fileExtension = com.google.common.io.Files.getFileExtension(Objects.requireNonNull(file.getOriginalFilename()));
+            String renameFile = extractUserNameFromEmail(realEstate.getUser().getEmail()) + '_' + realEstateId + '_' + realEstate.getTitle().replaceAll("\\s", "_") + '_' + ++numberOfUploadedRealEstates + '.' + fileExtension;
+            String filePath = REAL_ESTATE_FOLDER_PATH + renameFile;
 
-        if (storageRepository.findImageByName(renameFile).isPresent())
-            return Response.builder().message("image is already uploaded").build();
+            storageRepository.save(Storage.builder()
+                    .name(renameFile)
+                    .type(file.getContentType())
+                    .path(filePath)
+                    .build());
 
-        storageRepository.save(Storage.builder()
-                .name(renameFile)
-                .type(file.getContentType())
-                .path(filePath).build());
+            realEstateImagesRepository.save(new RealEstateImages(renameFile, "http://" + IP + ":8080/image/" + renameFile, realEstate));
 
-        realEstateImagesRepository.save(new RealEstateImages("http://" + IP + ":8080/image/" + renameFile, realEstate));
+            file.transferTo(new File(filePath));
 
-        file.transferTo(new File(filePath));
+        }
 
         return Response.builder().message("image uploaded").build();
     }
 
     public byte[] downloadImage(String fileName) throws IOException {
-        Storage fileData = storageRepository.findImageByName(fileName).orElseThrow(() -> new IllegalArgumentException("image with name " + fileName + " not found"));
+        Storage fileData = storageRepository.findImageByName(fileName).orElseThrow(() -> new IllegalStateException("image with name " + fileName + " not found"));
         String filePath = fileData.getPath();
         return Files.readAllBytes(new File(filePath).toPath());
     }
 
+//    public Response deleteImage(String fileName, String deleteType) {
+//        Storage storage = storageRepository.findImageByName(fileName).orElseThrow(() -> new IllegalStateException("image with name " + fileName + " not found"));
+//        String imagePath = storageRepository.findImagePathByImageName(fileName);
+//        File file = new File(imagePath);
+//        if (file.exists()) {
+//            file.delete();
+//        }
+//        storageRepository.delete(storage);
+//
+//        if (deleteType.equals("user")) {
+//            userRepository.deleteImageURL("http://" + IP + ":8080/image/" + fileName);
+//        } else {
+//            RealEstateImages realEstateImages = realEstateImagesRepository.findByImageURL("http://" + IP + ":8080/image/" + fileName).orElseThrow(() -> new IllegalStateException("image with name " + fileName + " not found"));
+//            realEstateImagesRepository.delete(realEstateImages);
+//        }
+//
+//        return Response.builder().message("image deleted").build();
+//    }
 }

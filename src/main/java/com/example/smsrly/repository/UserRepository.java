@@ -30,4 +30,9 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     @Modifying
     @Query(value = "UPDATE user SET enable = TRUE WHERE email = :email", nativeQuery = true)
     void enableUser(String email);
+
+    @Transactional
+    @Modifying
+    @Query(value = "UPDATE user SET imageurl = null WHERE imageurl = :imageURL", nativeQuery = true)
+    void deleteImageURL(String imageURL);
 }

@@ -25,9 +25,14 @@ public class ImageController {
     }
 
     @PostMapping(path = "realEstate")
-    public Response upload(@RequestParam("image") MultipartFile file, @RequestParam(value = "RealEstateId") int realEstateId) throws IOException {
-        return storageService.uploadImage(file, realEstateId);
+    public Response upload(@RequestParam("image") MultipartFile[] files, @RequestParam(value = "RealEstateId") int realEstateId) throws IOException {
+        return storageService.uploadImage(files, realEstateId);
     }
+
+//    @DeleteMapping(path = "/{deleteType}/{fileName}")
+//    public Response delete(@PathVariable("deleteType") String deleteType, @PathVariable("fileName") String fileName) {
+//        return storageService.deleteImage(fileName, deleteType);
+//    }
 
     @GetMapping(path = "{fileName}")
     public ResponseEntity<?> download(@PathVariable("fileName") String fileName) throws IOException {
