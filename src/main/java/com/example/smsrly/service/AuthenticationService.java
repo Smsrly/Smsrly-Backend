@@ -232,7 +232,7 @@ public class AuthenticationService {
             return AuthenticationResponse.builder().message("Email is not valid").build();
         }
 
-        String validationMessage = validatingService.validating(null, null, null, null, 0, 0, 0, request.getImageURL(), 6);
+        String validationMessage = validatingService.validating(null, null, null, null, 0, 0, 0, request.getImageURL(), 7);
         if (validationMessage != "validated") {
             return AuthenticationResponse.builder().message(validationMessage).build();
         }
@@ -240,7 +240,10 @@ public class AuthenticationService {
         Optional<User> userEmail = userRepository.findUserByEmail(request.getEmail());
 
         if (userEmail.isPresent()) {
-            return AuthenticationResponse.builder().token(jwtService.generateToken(userEmail.get())).message("log in successfully").build();
+            var jwtToken = jwtService.generateToken(userEmail.get());
+            expireAllTokens(userEmail.get());
+            saveToken(userEmail.get(), jwtToken);
+            return AuthenticationResponse.builder().token(jwtToken).message("log in successfully").build();
         }
 
         var user = User.builder()
@@ -257,7 +260,6 @@ public class AuthenticationService {
 
         userRepository.save(user);
         var jwtToken = jwtService.generateToken(user);
-        expireAllTokens(user);
         saveToken(user, jwtToken);
         return AuthenticationResponse.builder().token(jwtToken).message("log in successfully").build();
     }

@@ -111,7 +111,7 @@ public class ValidatingService {
             if (!isValidLocation(latitude, longitude)) return "Location is not valid";
         }
 
-        if (validatingNumber == 7) {
+        if (validatingNumber == 7 && imageURL != null) {
             if (!isValidURL(imageURL)) return "Image URL is not valid";
         }
 
