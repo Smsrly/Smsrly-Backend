@@ -55,8 +55,10 @@ public class RealEstateController {
                                      @RequestParam(required = false) Optional<Double> price,
                                      @RequestParam(required = false) Optional<Double> latitude,
                                      @RequestParam(required = false) Optional<Double> longitude,
-                                     @RequestParam(required = false) String image) {
-        return realEstateService.updateRealEstate(authHeader, realEstateId, title, description, area, floorNumber, bathroomNumber, roomNumber, price, latitude, longitude, image);
+                                     @RequestParam(required = false) String city,
+                                     @RequestParam(required = false) String country,
+                                     @RequestParam(required = false) Optional<Boolean> isSale) {
+        return realEstateService.updateRealEstate(authHeader, realEstateId, title, description, area, floorNumber, bathroomNumber, roomNumber, price, latitude, longitude,city,country,isSale);
     }
 
 }

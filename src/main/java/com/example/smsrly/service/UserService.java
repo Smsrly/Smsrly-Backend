@@ -106,7 +106,7 @@ public class UserService {
             double lat = latitude.get();
             double lon = longitude.get();
 
-            if (!(lat == user.getLatitude()) || !(lon == user.getLongitude())) {
+            if (lat != user.getLatitude() || lon != user.getLongitude()) {
 
                 String validationMessage = validatingService.validating(null, null, null, null, 0, lat, lon, null, 6);
                 if (validationMessage != "validated") {

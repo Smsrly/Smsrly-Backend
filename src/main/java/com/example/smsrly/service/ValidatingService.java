@@ -135,7 +135,19 @@ public class ValidatingService {
         return matcher.matches();
     }
 
-    protected String validatingRealEstate(String title, String description, double area, int floorNumber, int bathroomNumber, int roomNumber, double price, int validatingNumber) {
+    public static boolean isValidCity(String city) {
+        // Regular expression to match only alphabetical characters and spaces
+        String regex = "^[a-zA-Z ]*$";
+        return Pattern.matches(regex, city);
+    }
+
+    public static boolean isValidCountry(String country) {
+        // Regular expression to match only alphabetical characters and spaces
+        String regex = "^[a-zA-Z ]*$";
+        return Pattern.matches(regex, country);
+    }
+
+    protected String validatingRealEstate(String title, String description, double area, int floorNumber, int bathroomNumber, int roomNumber, double price, String city, String country, int validatingNumber) {
 
         if (validatingNumber == 1 || validatingNumber == 0) {
             if (!isValidRealEstateText(title, true)) return "this is invalid title";
@@ -162,9 +174,13 @@ public class ValidatingService {
         }
 
         if (validatingNumber == 7 || validatingNumber == 0) {
-            if (price < 100000 || price > 1000000000) return "this is invalid price";
+            if (price < 1000 || price > 1000000000) return "this is invalid price";
         }
 
+        if (validatingNumber == 8 || validatingNumber == 0) {
+            if (!isValidCity(city)) return "this is invalid city";
+            if (!isValidCountry(country)) return "this is invalid country";
+        }
         return "validated";
     }
 

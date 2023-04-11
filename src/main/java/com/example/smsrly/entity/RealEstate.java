@@ -46,6 +46,14 @@ public class RealEstate {
     private double latitude;
     @Column(nullable = false)
     private double longitude;
+    @NotBlank(message = "city must be not blank")
+    @Column(nullable = false)
+    private String city;
+    @NotBlank(message = "country must be not blank")
+    @Column(nullable = false)
+    private String country;
+    @Column(nullable = false)
+    private Boolean isSale;
     @OneToMany(mappedBy = "realEstate", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<RealEstateImages> realEstateImages;
 

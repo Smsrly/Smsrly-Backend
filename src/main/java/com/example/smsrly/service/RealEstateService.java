@@ -1,10 +1,8 @@
 package com.example.smsrly.service;
 
 import com.example.smsrly.entity.RealEstate;
-import com.example.smsrly.entity.Request;
 import com.example.smsrly.entity.User;
 import com.example.smsrly.repository.RealEstateRepository;
-import com.example.smsrly.repository.RequestRepository;
 import com.example.smsrly.repository.UserRepository;
 import com.example.smsrly.response.OwnerInfo;
 import com.example.smsrly.response.RealEstateResponse;
@@ -57,6 +55,9 @@ public class RealEstateService {
                 .longitude(realEstate.getLongitude())
                 .latitude(realEstate.getLatitude())
                 .roomNumber(realEstate.getRoomNumber())
+                .city(realEstate.getCity())
+                .country(realEstate.getCountry())
+                .isSale(realEstate.getIsSale())
                 .realEstateImages(realEstate.getRealEstateImages())
                 .ownerInfo(OwnerInfo.builder()
                         .Name(realEstate.getUser().getFirstName() + ' ' + realEstate.getUser().getLastName())
@@ -78,7 +79,7 @@ public class RealEstateService {
     }
 
     @Transactional
-    public Response updateRealEstate(String authHeader, int realEstateId, String title, String description, Optional<Double> area, Optional<Integer> floorNumber, Optional<Integer> bathroomNumber, Optional<Integer> roomNumber, Optional<Double> price, Optional<Double> latitude, Optional<Double> longitude, String image) {
+    public Response updateRealEstate(String authHeader, int realEstateId, String title, String description, Optional<Double> area, Optional<Integer> floorNumber, Optional<Integer> bathroomNumber, Optional<Integer> roomNumber, Optional<Double> price, Optional<Double> latitude, Optional<Double> longitude, String city, String country, Optional<Boolean> isSale) {
 
         User user = userService.getUser(authHeader);
         RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() ->
@@ -91,7 +92,7 @@ public class RealEstateService {
 
 
         if (title != null && !title.equals(realEstate.getTitle())) {
-            String validationMessage = validatingService.validatingRealEstate(title.replaceAll("\\s", ""), null, 0, 0, 0, 0, 0, 1);
+            String validationMessage = validatingService.validatingRealEstate(title.replaceAll("\\s", ""), null, 0, 0, 0, 0, 0, null, null, 1);
             if (validationMessage != "validated") {
                 return Response.builder().message(validationMessage).build();
             }
@@ -100,7 +101,7 @@ public class RealEstateService {
 
 
         if (description != null && !description.equals(realEstate.getDescription())) {
-            String validationMessage = validatingService.validatingRealEstate(null, description.replaceAll("\\s", ""), 0, 0, 0, 0, 0, 2);
+            String validationMessage = validatingService.validatingRealEstate(null, description.replaceAll("\\s", ""), 0, 0, 0, 0, 0, null, null, 2);
             if (validationMessage != "validated") {
                 return Response.builder().message(validationMessage).build();
             }
@@ -111,8 +112,8 @@ public class RealEstateService {
         if (area.isPresent()) {
             double realEstateArea = area.get();
 
-            if (!(realEstateArea == realEstate.getArea())) {
-                String validationMessage = validatingService.validatingRealEstate(null, null, realEstateArea, 0, 0, 0, 0, 3);
+            if (realEstateArea != realEstate.getArea()) {
+                String validationMessage = validatingService.validatingRealEstate(null, null, realEstateArea, 0, 0, 0, 0, null, null, 3);
                 if (validationMessage != "validated") {
                     return Response.builder().message(validationMessage).build();
                 }
@@ -124,9 +125,9 @@ public class RealEstateService {
         if (floorNumber.isPresent()) {
             int realEstateFloorNumber = floorNumber.get();
 
-            if (!(realEstateFloorNumber == realEstate.getFloorNumber())) {
+            if (realEstateFloorNumber != realEstate.getFloorNumber()) {
 
-                String validationMessage = validatingService.validatingRealEstate(null, null, 0, realEstateFloorNumber, 0, 0, 0, 4);
+                String validationMessage = validatingService.validatingRealEstate(null, null, 0, realEstateFloorNumber, 0, 0, 0, null, null, 4);
                 if (validationMessage != "validated") {
                     return Response.builder().message(validationMessage).build();
                 }
@@ -138,9 +139,9 @@ public class RealEstateService {
 
         if (bathroomNumber.isPresent()) {
             int realEstateBathroomNumber = bathroomNumber.get();
-            if (!(realEstateBathroomNumber == realEstate.getBathroomNumber())) {
+            if (realEstateBathroomNumber != realEstate.getBathroomNumber()) {
 
-                String validationMessage = validatingService.validatingRealEstate(null, null, 0, 0, realEstateBathroomNumber, 0, 0, 5);
+                String validationMessage = validatingService.validatingRealEstate(null, null, 0, 0, realEstateBathroomNumber, 0, 0, null, null, 5);
                 if (validationMessage != "validated") {
                     return Response.builder().message(validationMessage).build();
                 }
@@ -152,8 +153,8 @@ public class RealEstateService {
 
         if (roomNumber.isPresent()) {
             int realEstateRoomNumber = roomNumber.get();
-            if (!(realEstateRoomNumber == realEstate.getRoomNumber())) {
-                String validationMessage = validatingService.validatingRealEstate(null, null, 0, 0, 0, realEstateRoomNumber, 0, 6);
+            if (realEstateRoomNumber != realEstate.getRoomNumber()) {
+                String validationMessage = validatingService.validatingRealEstate(null, null, 0, 0, 0, realEstateRoomNumber, 0, null, null, 6);
                 if (validationMessage != "validated") {
                     return Response.builder().message(validationMessage).build();
                 }
@@ -164,8 +165,8 @@ public class RealEstateService {
 
         if (price.isPresent()) {
             double realEstatePrice = price.get();
-            if (!(realEstatePrice == realEstate.getPrice())) {
-                String validationMessage = validatingService.validatingRealEstate(null, null, 0, 0, 0, 0, realEstatePrice, 7);
+            if (realEstatePrice != realEstate.getPrice()) {
+                String validationMessage = validatingService.validatingRealEstate(null, null, 0, 0, 0, 0, realEstatePrice, null, null, 7);
                 if (validationMessage != "validated") {
                     return Response.builder().message(validationMessage).build();
                 }
@@ -177,7 +178,7 @@ public class RealEstateService {
             double realEstateLatitude = latitude.get();
             double realEstateLongitude = longitude.get();
 
-            if (!(realEstateLatitude == realEstate.getLatitude()) || !(realEstateLongitude == realEstate.getLongitude())) {
+            if (realEstateLatitude != realEstate.getLatitude() || realEstateLongitude != realEstate.getLongitude()) {
 
                 String validationMessage = validatingService.validating(null, null, null, null, 0, realEstateLatitude, realEstateLongitude, null, 6);
                 if (validationMessage != "validated") {
@@ -187,7 +188,19 @@ public class RealEstateService {
                 realEstate.setLatitude(realEstateLatitude);
                 realEstate.setLongitude(realEstateLongitude);
             }
+
+            if (!city.equals(realEstate.getCity()) || !country.equals(realEstate.getCountry())) {
+
+                String validationMessage = validatingService.validatingRealEstate(null, null, 0, 0, 0, 0, 0, city, country, 8);
+
+                if (validationMessage != "validated") return Response.builder().message(validationMessage).build();
+
+                realEstate.setCity(city);
+                realEstate.setCountry(country);
+            }
         }
+
+        if (isSale.isPresent() && isSale.get() != realEstate.getIsSale()) realEstate.setIsSale(isSale.get());
 
         return Response.builder().message("updated").build();
     }
@@ -207,7 +220,7 @@ public class RealEstateService {
             return Response.builder().message("there are upload limit, please try again after 1 hour").build();
         }
 
-        String validationMessage = validatingService.validatingRealEstate(realEstate.getTitle().replaceAll("\\s", ""), realEstate.getDescription().replaceAll("\\s", ""), realEstate.getArea(), realEstate.getFloorNumber(), realEstate.getBathroomNumber(), realEstate.getRoomNumber(), realEstate.getPrice(), 0);
+        String validationMessage = validatingService.validatingRealEstate(realEstate.getTitle().replaceAll("\\s", ""), realEstate.getDescription().replaceAll("\\s", ""), realEstate.getArea(), realEstate.getFloorNumber(), realEstate.getBathroomNumber(), realEstate.getRoomNumber(), realEstate.getPrice(), realEstate.getCity(), realEstate.getCountry(), 0);
         if (validationMessage != "validated") {
             return Response.builder().message(validationMessage).build();
         }
