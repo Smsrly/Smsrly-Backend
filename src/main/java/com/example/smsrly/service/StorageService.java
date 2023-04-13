@@ -22,13 +22,14 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class StorageService {
 
-    private static final String USER_FOLDER_PATH = "C:\\Users\\name\\IdeaProjects\\Smsrly-Backend\\src\\main\\Images\\User\\"; // change you folder path
-    private static final String REAL_ESTATE_FOLDER_PATH = "C:\\Users\\name\\IdeaProjects\\Smsrly-Backend\\src\\main\\Images\\RealEstate\\"; // change you folder path
+    private static final String PROJECT_PATH = "C:\\Users\\Youssef\\IdeaProjects\\smsrly\\"; // add your project path here (you can write 'pwd' command at terminal to get you path so copy and paste it here)
+    private static final String USER_FOLDER_PATH = PROJECT_PATH + "src\\main\\Images\\User\\";
+    private static final String REAL_ESTATE_FOLDER_PATH = PROJECT_PATH + "src\\main\\Images\\RealEstate\\";
+    private static final String BASE_URL = "http://localhost:8080/";
     private final StorageRepository storageRepository;
     private final UserRepository userRepository;
     private final RealEstateRepository realEstateRepository;
     private final RealEstateImagesRepository realEstateImagesRepository;
-    private static final String IP = "localhost"; // add your IP here
 
     public static String extractUserNameFromEmail(String email) {
         String userName = "";
@@ -55,7 +56,7 @@ public class StorageService {
                 .type(file.getContentType())
                 .path(filePath).build());
 
-        user.setImageURL("http://" + IP + ":8080/image/" + renameFile);
+        user.setImageURL(BASE_URL + "image/" + renameFile);
 
         userRepository.save(user);
 
@@ -82,7 +83,7 @@ public class StorageService {
                     .path(filePath)
                     .build());
 
-            realEstateImagesRepository.save(new RealEstateImages(renameFile, "http://" + IP + ":8080/image/" + renameFile, realEstate));
+            realEstateImagesRepository.save(new RealEstateImages(renameFile, BASE_URL + "image/" + renameFile, realEstate));
 
             file.transferTo(new File(filePath));
 
@@ -107,9 +108,9 @@ public class StorageService {
 //        storageRepository.delete(storage);
 //
 //        if (deleteType.equals("user")) {
-//            userRepository.deleteImageURL("http://" + IP + ":8080/image/" + fileName);
+//            userRepository.deleteImageURL(BASE_URL + "image/" + fileName);
 //        } else {
-//            RealEstateImages realEstateImages = realEstateImagesRepository.findByImageURL("http://" + IP + ":8080/image/" + fileName).orElseThrow(() -> new IllegalStateException("image with name " + fileName + " not found"));
+//            RealEstateImages realEstateImages = realEstateImagesRepository.findByImageURL(BASE_URL + "image/" + fileName).orElseThrow(() -> new IllegalStateException("image with name " + fileName + " not found"));
 //            realEstateImagesRepository.delete(realEstateImages);
 //        }
 //

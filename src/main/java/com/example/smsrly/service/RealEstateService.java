@@ -1,9 +1,9 @@
 package com.example.smsrly.service;
 
 import com.example.smsrly.entity.RealEstate;
-import com.example.smsrly.entity.Save;
 import com.example.smsrly.entity.User;
 import com.example.smsrly.repository.RealEstateRepository;
+import com.example.smsrly.repository.SaveRepository;
 import com.example.smsrly.repository.UserRepository;
 import com.example.smsrly.response.OwnerInfo;
 import com.example.smsrly.response.RealEstateResponse;
@@ -23,24 +23,21 @@ public class RealEstateService {
     private final RealEstateRepository realEstateRepository;
     private final UserRepository userRepository;
     private final UserService userService;
-
+    private final SaveRepository saveRepository;
     private final ValidatingService validatingService;
 
 
     public List<RealEstateResponse> getRealEstates(String authHeader) {
-        var user = userService.getUser(authHeader);
-        int userId = user.getId();
-        double latitude = userRepository.findLatitudeById(userId);
-        Set<Save> userSaves = user.getSave() ;
-        Set<Integer> set = new HashSet<>();
-        for(var save : userSaves){
-            set.add(save.getRealEstate().getId());
-        }
+        int userId = userService.getUserId(authHeader);
         double longitude = userRepository.findLongitudeById(userId);
+        double latitude = userRepository.findLatitudeById(userId);
+
+        List<Integer> realEstateSavesId = saveRepository.findSavesByUserId(userId);
         List<RealEstate> realEstate = realEstateRepository.getRealEstateNearestToUser(latitude, longitude, userId);
         List<RealEstateResponse> realEstateResponseList = new ArrayList<>();
+
         for (RealEstate estate : realEstate) {
-            realEstateResponseList.add(getRealEstate(estate.getId(), set.contains(estate.getId())));
+            realEstateResponseList.add(getRealEstate(estate.getId(), realEstateSavesId.contains(estate.getId())));
         }
 
         return realEstateResponseList;
@@ -72,6 +69,7 @@ public class RealEstateService {
                         .build()
                 ).build();
     }
+
     public RealEstateResponse getRealEstate(int realEstateId) {
         RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() ->
                 new IllegalStateException("realEstate with id " + realEstateId + " not exists"));

@@ -24,9 +24,7 @@ public class RealEstateResponse {
     private double price;
     private double latitude;
     private double longitude;
-
     private Boolean hasSaved;
-
     private String city;
     private String country;
     private Boolean isSale;

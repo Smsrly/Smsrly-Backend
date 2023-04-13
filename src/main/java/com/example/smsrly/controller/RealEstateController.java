@@ -1,7 +1,6 @@
 package com.example.smsrly.controller;
 
 import com.example.smsrly.entity.RealEstate;
-import com.example.smsrly.entity.Request;
 import com.example.smsrly.response.RealEstateResponse;
 import com.example.smsrly.response.Response;
 import com.example.smsrly.service.RealEstateService;
@@ -58,7 +57,7 @@ public class RealEstateController {
                                      @RequestParam(required = false) String city,
                                      @RequestParam(required = false) String country,
                                      @RequestParam(required = false) Optional<Boolean> isSale) {
-        return realEstateService.updateRealEstate(authHeader, realEstateId, title, description, area, floorNumber, bathroomNumber, roomNumber, price, latitude, longitude,city,country,isSale);
+        return realEstateService.updateRealEstate(authHeader, realEstateId, title, description, area, floorNumber, bathroomNumber, roomNumber, price, latitude, longitude, city, country, isSale);
     }
 
 }
