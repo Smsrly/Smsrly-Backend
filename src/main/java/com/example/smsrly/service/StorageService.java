@@ -22,8 +22,8 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class StorageService {
 
-    private static final String USER_FOLDER_PATH = "C:\\Users\\Youssef\\IdeaProjects\\smsrly\\src\\main\\Images\\User\\"; // change you folder path
-    private static final String REAL_ESTATE_FOLDER_PATH = "C:\\Users\\Youssef\\IdeaProjects\\smsrly\\src\\main\\Images\\RealEstate\\"; // change you folder path
+    private static final String USER_FOLDER_PATH = "C:\\Users\\name\\IdeaProjects\\Smsrly-Backend\\src\\main\\Images\\User\\"; // change you folder path
+    private static final String REAL_ESTATE_FOLDER_PATH = "C:\\Users\\name\\IdeaProjects\\Smsrly-Backend\\src\\main\\Images\\RealEstate\\"; // change you folder path
     private final StorageRepository storageRepository;
     private final UserRepository userRepository;
     private final RealEstateRepository realEstateRepository;

@@ -14,7 +14,7 @@
     <name>smsrly</name>
     <description>Smsrly-Backend</description>
     <properties>
-        <java.version>18</java.version>
+        <java.version>17</java.version>
     </properties>
     <dependencies>
         <dependency>

@@ -1,6 +1,7 @@
 package com.example.smsrly.service;
 
 import com.example.smsrly.entity.RealEstate;
+import com.example.smsrly.entity.Save;
 import com.example.smsrly.entity.User;
 import com.example.smsrly.repository.RealEstateRepository;
 import com.example.smsrly.repository.UserRepository;
@@ -12,9 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 
 @Service
@@ -24,23 +23,55 @@ public class RealEstateService {
     private final RealEstateRepository realEstateRepository;
     private final UserRepository userRepository;
     private final UserService userService;
+
     private final ValidatingService validatingService;
 
 
     public List<RealEstateResponse> getRealEstates(String authHeader) {
-
-        int userId = userService.getUserId(authHeader);
+        var user = userService.getUser(authHeader);
+        int userId = user.getId();
         double latitude = userRepository.findLatitudeById(userId);
+        Set<Save> userSaves = user.getSave() ;
+        Set<Integer> set = new HashSet<>();
+        for(var save : userSaves){
+            set.add(save.getRealEstate().getId());
+        }
         double longitude = userRepository.findLongitudeById(userId);
         List<RealEstate> realEstate = realEstateRepository.getRealEstateNearestToUser(latitude, longitude, userId);
         List<RealEstateResponse> realEstateResponseList = new ArrayList<>();
         for (RealEstate estate : realEstate) {
-            realEstateResponseList.add(getRealEstate(estate.getId()));
+            realEstateResponseList.add(getRealEstate(estate.getId(), set.contains(estate.getId())));
         }
 
         return realEstateResponseList;
     }
 
+    public RealEstateResponse getRealEstate(int realEstateId, boolean hasSaved) {
+        RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() ->
+                new IllegalStateException("realEstate with id " + realEstateId + " not exists"));
+        return RealEstateResponse.builder()
+                .id(realEstate.getId())
+                .title(realEstate.getTitle())
+                .bathroomNumber(realEstate.getBathroomNumber())
+                .description(realEstate.getDescription())
+                .floorNumber(realEstate.getFloorNumber())
+                .area(realEstate.getArea())
+                .price(realEstate.getPrice())
+                .longitude(realEstate.getLongitude())
+                .latitude(realEstate.getLatitude())
+                .roomNumber(realEstate.getRoomNumber())
+                .city(realEstate.getCity())
+                .hasSaved(hasSaved)
+                .country(realEstate.getCountry())
+                .isSale(realEstate.getIsSale())
+                .realEstateImages(realEstate.getRealEstateImages())
+                .ownerInfo(OwnerInfo.builder()
+                        .Name(realEstate.getUser().getFirstName() + ' ' + realEstate.getUser().getLastName())
+                        .phoneNumber(realEstate.getUser().getPhoneNumber())
+                        .image(realEstate.getUser().getImageURL())
+                        .build()
+                ).build();
+    }
     public RealEstateResponse getRealEstate(int realEstateId) {
         RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() ->
                 new IllegalStateException("realEstate with id " + realEstateId + " not exists"));
