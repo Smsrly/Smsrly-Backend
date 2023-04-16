@@ -35,18 +35,23 @@ public class RealEstateService {
         double latitude = userRepository.findLatitudeById(userId);
 
         Set<Integer> realEstateSavesId = saveRepository.findSavesByUserId(userId);
+        Set<Integer> realEstateRequestsId = requestRepository.findRequestByUserId(userId);
 
         List<RealEstate> realEstate = realEstateRepository.getRealEstateNearestToUser(latitude, longitude, userId);
         List<RealEstateResponse> realEstateResponseList = new ArrayList<>();
 
         for (RealEstate estate : realEstate) {
-            realEstateResponseList.add(getRealEstate(estate.getId(), realEstateSavesId.contains(estate.getId())));
+            realEstateResponseList.add(getRealEstate(
+                    estate.getId(),
+                    realEstateSavesId.contains(estate.getId()) ,
+                    realEstateRequestsId.contains(estate.getId()))
+            );
         }
 
         return realEstateResponseList;
     }
 
-    public RealEstateResponse getRealEstate(int realEstateId, boolean hasSaved) {
+    public RealEstateResponse getRealEstate(int realEstateId, boolean hasSaved,boolean hasRequested) {
         RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() ->
                 new IllegalStateException("realEstate with id " + realEstateId + " not exists"));
         return RealEstateResponse.builder()
@@ -61,6 +66,7 @@ public class RealEstateService {
                 .latitude(realEstate.getLatitude())
                 .roomNumber(realEstate.getRoomNumber())
                 .city(realEstate.getCity())
+                .hasRequested(hasRequested)
                 .hasSaved(hasSaved)
                 .country(realEstate.getCountry())
                 .isSale(realEstate.getIsSale())
