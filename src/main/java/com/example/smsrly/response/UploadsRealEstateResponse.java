@@ -12,7 +12,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RealEstateResponse {
+public class UploadsRealEstateResponse {
 
     private int id;
     private String title;
@@ -24,12 +24,9 @@ public class RealEstateResponse {
     private double price;
     private double latitude;
     private double longitude;
-    private Boolean hasSaved;
-    private Boolean hasRequested;
     private String city;
     private String country;
     private Boolean isSale;
-    private UserInfo userInfo;
     private List<RealEstateImages> realEstateImages;
-
+    private List<UserInfo> RequestedBy;
 }

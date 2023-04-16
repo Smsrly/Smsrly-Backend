@@ -3,9 +3,10 @@ package com.example.smsrly.service;
 import com.example.smsrly.entity.RealEstate;
 import com.example.smsrly.entity.User;
 import com.example.smsrly.repository.RealEstateRepository;
+import com.example.smsrly.repository.RequestRepository;
 import com.example.smsrly.repository.SaveRepository;
 import com.example.smsrly.repository.UserRepository;
-import com.example.smsrly.response.OwnerInfo;
+import com.example.smsrly.response.UserInfo;
 import com.example.smsrly.response.RealEstateResponse;
 import com.example.smsrly.response.Response;
 import lombok.AllArgsConstructor;
@@ -25,6 +26,7 @@ public class RealEstateService {
     private final UserService userService;
     private final SaveRepository saveRepository;
     private final ValidatingService validatingService;
+    private final RequestRepository requestRepository;
 
 
     public List<RealEstateResponse> getRealEstates(String authHeader) {
@@ -32,7 +34,8 @@ public class RealEstateService {
         double longitude = userRepository.findLongitudeById(userId);
         double latitude = userRepository.findLatitudeById(userId);
 
-        List<Integer> realEstateSavesId = saveRepository.findSavesByUserId(userId);
+        Set<Integer> realEstateSavesId = saveRepository.findSavesByUserId(userId);
+
         List<RealEstate> realEstate = realEstateRepository.getRealEstateNearestToUser(latitude, longitude, userId);
         List<RealEstateResponse> realEstateResponseList = new ArrayList<>();
 
@@ -62,7 +65,7 @@ public class RealEstateService {
                 .country(realEstate.getCountry())
                 .isSale(realEstate.getIsSale())
                 .realEstateImages(realEstate.getRealEstateImages())
-                .ownerInfo(OwnerInfo.builder()
+                .userInfo(UserInfo.builder()
                         .Name(realEstate.getUser().getFirstName() + ' ' + realEstate.getUser().getLastName())
                         .phoneNumber(realEstate.getUser().getPhoneNumber())
                         .image(realEstate.getUser().getImageURL())
@@ -70,9 +73,13 @@ public class RealEstateService {
                 ).build();
     }
 
-    public RealEstateResponse getRealEstate(int realEstateId) {
+    public RealEstateResponse getRealEstate(int realEstateId, String authHeader) {
+        int userId = userService.getUserId(authHeader);
         RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() ->
                 new IllegalStateException("realEstate with id " + realEstateId + " not exists"));
+
+        Set<Integer> realEstateRequestsId = requestRepository.findRequestByUserId(userId);
+
         return RealEstateResponse.builder()
                 .id(realEstate.getId())
                 .title(realEstate.getTitle())
@@ -87,8 +94,9 @@ public class RealEstateService {
                 .city(realEstate.getCity())
                 .country(realEstate.getCountry())
                 .isSale(realEstate.getIsSale())
+                .hasRequested(realEstateRequestsId.contains(realEstateId))
                 .realEstateImages(realEstate.getRealEstateImages())
-                .ownerInfo(OwnerInfo.builder()
+                .userInfo(UserInfo.builder()
                         .Name(realEstate.getUser().getFirstName() + ' ' + realEstate.getUser().getLastName())
                         .phoneNumber(realEstate.getUser().getPhoneNumber())
                         .image(realEstate.getUser().getImageURL())

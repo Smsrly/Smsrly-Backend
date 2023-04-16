@@ -1,15 +1,18 @@
 package com.example.smsrly.service;
 
 import com.example.smsrly.entity.RealEstate;
+import com.example.smsrly.entity.Request;
 import com.example.smsrly.entity.User;
+import com.example.smsrly.repository.RealEstateRepository;
+import com.example.smsrly.repository.RequestRepository;
 import com.example.smsrly.repository.UserRepository;
-import com.example.smsrly.response.Response;
-import com.example.smsrly.response.UserResponse;
+import com.example.smsrly.response.*;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,6 +25,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final ValidatingService validatingService;
+    private final RealEstateRepository realEstateRepository;
+    private final RequestRepository requestRepository;
 
     public String extractEmailFromToken(String authHeader) {
         String token = authHeader.substring(7);
@@ -122,9 +127,54 @@ public class UserService {
         return Response.builder().message("updated").build();
     }
 
-    public List<RealEstate> getUserUploads(String authHeader) {
+
+    // need maintenance here
+    public List<UploadsRealEstateResponse> getUserUploads(String authHeader) {
         User user = getUser(authHeader);
-        return user.getUploads();
+
+        List<RealEstate> realEstate = user.getUploads();
+        List<UploadsRealEstateResponse> realEstateResponseList = new ArrayList<>();
+
+        for (RealEstate estate : realEstate) {
+            realEstateResponseList.add(getRealEstateRequestedBy(estate.getId()));
+        }
+        return realEstateResponseList;
+    }
+
+    UploadsRealEstateResponse getRealEstateRequestedBy(int realEstateId) {
+        RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() ->
+                new IllegalStateException("realEstate with id " + realEstateId + " not exists"));
+
+        return UploadsRealEstateResponse.builder()
+                .id(realEstate.getId())
+                .title(realEstate.getTitle())
+                .bathroomNumber(realEstate.getBathroomNumber())
+                .description(realEstate.getDescription())
+                .floorNumber(realEstate.getFloorNumber())
+                .area(realEstate.getArea())
+                .price(realEstate.getPrice())
+                .longitude(realEstate.getLongitude())
+                .latitude(realEstate.getLatitude())
+                .roomNumber(realEstate.getRoomNumber())
+                .city(realEstate.getCity())
+                .country(realEstate.getCountry())
+                .isSale(realEstate.getIsSale())
+                .realEstateImages(realEstate.getRealEstateImages())
+                .RequestedBy(userInfoList(realEstateId))
+                .build();
+    }
+
+    List<UserInfo> userInfoList(int realEstateId) {
+        List<Request> requests = requestRepository.getRequestsByRealEstateId(realEstateId);
+        List<UserInfo> userInfoList = new ArrayList<>();
+        for (Request request : requests) {
+            userInfoList.add(UserInfo.builder()
+                    .Name(request.getUser().getFirstName() + ' ' + request.getUser().getLastName())
+                    .image(request.getUser().getImageURL())
+                    .phoneNumber(request.getUser().getPhoneNumber())
+                    .build());
+        }
+        return userInfoList;
     }
 
 }

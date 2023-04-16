@@ -2,6 +2,7 @@ package com.example.smsrly.controller;
 
 import com.example.smsrly.entity.RealEstate;
 import com.example.smsrly.response.Response;
+import com.example.smsrly.response.UploadsRealEstateResponse;
 import com.example.smsrly.response.UserResponse;
 import com.example.smsrly.service.StorageService;
 import com.example.smsrly.service.UserService;
@@ -43,7 +44,7 @@ public class UserController {
 
 
     @GetMapping(path = "/uploads")
-    public List<RealEstate> getUserUploads(@RequestHeader("Authorization") String authHeader) {
+    public List<UploadsRealEstateResponse> getUserUploads(@RequestHeader("Authorization") String authHeader) {
         return userService.getUserUploads(authHeader);
     }
 

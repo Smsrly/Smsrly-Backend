@@ -5,8 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface SaveRepository extends JpaRepository<Save, Integer> {
@@ -14,5 +14,5 @@ public interface SaveRepository extends JpaRepository<Save, Integer> {
     Optional<Save> findSave(int realEstateId, int userId);
 
     @Query(value = "SELECT real_estate_id FROM save where user_id = :userId", nativeQuery = true)
-    List<Integer> findSavesByUserId(int userId);
+    Set<Integer> findSavesByUserId(int userId);
 }

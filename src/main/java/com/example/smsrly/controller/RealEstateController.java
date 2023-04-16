@@ -26,8 +26,8 @@ public class RealEstateController {
 
 
     @GetMapping(path = "/{realEstateId}")
-    public RealEstateResponse realEstate(@PathVariable("realEstateId") int realEstateId) {
-        return realEstateService.getRealEstate(realEstateId);
+    public RealEstateResponse realEstate(@PathVariable("realEstateId") int realEstateId, @RequestHeader("Authorization") String authHeader) {
+        return realEstateService.getRealEstate(realEstateId, authHeader);
     }
 
     @PostMapping
