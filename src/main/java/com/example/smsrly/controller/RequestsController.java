@@ -2,6 +2,7 @@ package com.example.smsrly.controller;
 
 
 import com.example.smsrly.entity.Request;
+import com.example.smsrly.response.RealEstateResponse;
 import com.example.smsrly.response.Response;
 import com.example.smsrly.service.RequestsService;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,7 @@ public class RequestsController {
     private final RequestsService requestsService;
 
     @GetMapping
-    public Set<Request> getUserRequests(@RequestHeader("Authorization") String authHeader) {
+    public List<RealEstateResponse> getUserRequests(@RequestHeader("Authorization") String authHeader) {
         return requestsService.getUserRequests(authHeader);
     }
 

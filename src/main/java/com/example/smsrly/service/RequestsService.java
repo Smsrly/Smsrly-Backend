@@ -7,15 +7,15 @@ import com.example.smsrly.entity.Save;
 import com.example.smsrly.entity.User;
 import com.example.smsrly.repository.RealEstateRepository;
 import com.example.smsrly.repository.RequestRepository;
+import com.example.smsrly.repository.SaveRepository;
+import com.example.smsrly.response.RealEstateResponse;
 import com.example.smsrly.response.Response;
+import com.example.smsrly.response.UserInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +24,7 @@ public class RequestsService {
     private final UserService userService;
     private final RealEstateRepository realEstateRepository;
     private final RequestRepository requestRepository;
+    private final SaveRepository saveRepository;
 
     public Response addRequest(int realEstateId, String authHeader) {
         User user = userService.getUser(authHeader);
@@ -74,9 +75,46 @@ public class RequestsService {
         return requestRepository.getRequestsByRealEstateId(realEstateId);
     }
 
-    public Set<Request> getUserRequests(String authHeader) {
+    public List<RealEstateResponse> getUserRequests(String authHeader) {
         User user = userService.getUser(authHeader);
-        return user.getUserRequests();
+        Set<Request> requests = user.getUserRequests();
+        Set<Integer> saves = saveRepository.findSavesByUserId(user.getId());
+        List<RealEstateResponse> realEstateResponseList = new ArrayList<>();
+        for (var req : requests){
+            realEstateResponseList.add(
+                    getRealEstate(
+                            req.getRealEstate(),
+                            saves.contains(req.getRealEstate().getId()),
+                            true
+                    )
+            );
+        }
+        return realEstateResponseList;
+    }
+    public RealEstateResponse getRealEstate(RealEstate realEstate, boolean hasSaved,boolean hasRequested) {
+        return RealEstateResponse.builder()
+                .id(realEstate.getId())
+                .title(realEstate.getTitle())
+                .bathroomNumber(realEstate.getBathroomNumber())
+                .description(realEstate.getDescription())
+                .floorNumber(realEstate.getFloorNumber())
+                .area(realEstate.getArea())
+                .price(realEstate.getPrice())
+                .longitude(realEstate.getLongitude())
+                .latitude(realEstate.getLatitude())
+                .roomNumber(realEstate.getRoomNumber())
+                .city(realEstate.getCity())
+                .hasRequested(hasRequested)
+                .hasSaved(hasSaved)
+                .country(realEstate.getCountry())
+                .isSale(realEstate.getIsSale())
+                .realEstateImages(realEstate.getRealEstateImages())
+                .userInfo(UserInfo.builder()
+                        .Name(realEstate.getUser().getFirstName() + ' ' + realEstate.getUser().getLastName())
+                        .phoneNumber(realEstate.getUser().getPhoneNumber())
+                        .image(realEstate.getUser().getImageURL())
+                        .build()
+                ).build();
     }
 
 }
