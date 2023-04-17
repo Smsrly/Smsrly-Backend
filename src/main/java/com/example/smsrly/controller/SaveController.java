@@ -2,11 +2,13 @@ package com.example.smsrly.controller;
 
 
 import com.example.smsrly.entity.Save;
+import com.example.smsrly.response.RealEstateResponse;
 import com.example.smsrly.response.Response;
 import com.example.smsrly.service.SaveService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -17,7 +19,7 @@ public class SaveController {
     private final SaveService saveService;
 
     @GetMapping
-    public Set<Save> userSaves(@RequestHeader("Authorization") String authHeader) {
+    public List<RealEstateResponse> userSaves(@RequestHeader("Authorization") String authHeader) {
         return saveService.getUserSaves(authHeader);
     }
 
