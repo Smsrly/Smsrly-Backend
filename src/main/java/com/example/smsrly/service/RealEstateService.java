@@ -1,6 +1,7 @@
 package com.example.smsrly.service;
 
 import com.example.smsrly.entity.RealEstate;
+
 import com.example.smsrly.entity.User;
 import com.example.smsrly.repository.RealEstateRepository;
 import com.example.smsrly.repository.RequestRepository;
@@ -41,9 +42,10 @@ public class RealEstateService {
         List<RealEstateResponse> realEstateResponseList = new ArrayList<>();
 
         for (RealEstate estate : realEstate) {
+            realEstateResponseList.add(getRealEstate(estate.getId(), realEstateSavesId.contains(estate.getId()), realEstateRequestsId.contains(estate.getId())));
             realEstateResponseList.add(getRealEstate(
                     estate.getId(),
-                    realEstateSavesId.contains(estate.getId()) ,
+                    realEstateSavesId.contains(estate.getId()),
                     realEstateRequestsId.contains(estate.getId()))
             );
         }
@@ -51,7 +53,7 @@ public class RealEstateService {
         return realEstateResponseList;
     }
 
-    public RealEstateResponse getRealEstate(int realEstateId, boolean hasSaved,boolean hasRequested) {
+    public RealEstateResponse getRealEstate(int realEstateId, boolean hasSaved, boolean hasRequested) {
         RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() ->
                 new IllegalStateException("realEstate with id " + realEstateId + " not exists"));
         return RealEstateResponse.builder()
@@ -68,6 +70,7 @@ public class RealEstateService {
                 .city(realEstate.getCity())
                 .hasRequested(hasRequested)
                 .hasSaved(hasSaved)
+                .hasRequested(hasRequested)
                 .country(realEstate.getCountry())
                 .isSale(realEstate.getIsSale())
                 .realEstateImages(realEstate.getRealEstateImages())

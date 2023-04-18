@@ -103,8 +103,8 @@ public class AuthenticationService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .phoneNumber(request.getPhoneNumber())
-                .longitude(request.getLongitude())
-                .latitude(request.getLatitude())
+                .longitude(request.getLongitude() == 0 ? 31.2357  : request.getLongitude())
+                .latitude(request.getLatitude() == 0 ? 30.0444 : request.getLatitude())
                 .enable(false)
                 .build();
         userRepository.save(user);
@@ -251,8 +251,8 @@ public class AuthenticationService {
                 .lastName(request.getLastname())
                 .email(request.getEmail())
                 .imageURL(request.getImageURL())
-                .latitude(0.0)
-                .longitude(0.0)
+                .longitude(31.2357)
+                .latitude(30.0444)
                 .phoneNumber(0)
                 .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                 .enable(true)

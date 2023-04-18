@@ -22,9 +22,9 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class StorageService {
 
-    private static final String PROJECT_PATH = "/home/ahmed/IdeaProjects/Smsrly-Backend/"; // add your project path here (you can write 'pwd' command at terminal to get you path so copy and paste it here)
-    private static final String USER_FOLDER_PATH = PROJECT_PATH + "src/main/Images/User/";
-    private static final String REAL_ESTATE_FOLDER_PATH = PROJECT_PATH + "src/main/Images/RealEstate/";
+    private static final String PROJECT_PATH = "C:\\Users\\Youssef\\IdeaProjects\\smsrly\\"; // add your project path here (you can write 'pwd' command at terminal to get you path so copy and paste it here)
+    private static final String USER_FOLDER_PATH = PROJECT_PATH + "src\\main\\Images\\User\\";
+    private static final String REAL_ESTATE_FOLDER_PATH = PROJECT_PATH + "src\\main\\Images\\RealEstate\\";
     private static final String BASE_URL = "http://192.168.1.11:8080/";
     private final StorageRepository storageRepository;
     private final UserRepository userRepository;
