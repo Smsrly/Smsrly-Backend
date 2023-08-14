@@ -1,10 +1,8 @@
 package com.example.smsrly.service;
 
-import com.example.smsrly.entity.ResetPasswordCode;
-import com.example.smsrly.entity.User;
-import com.example.smsrly.entity.VerificationEmailCode;
-import com.example.smsrly.repository.ResetPasswordCodeRepository;
-import com.example.smsrly.response.Response;
+import com.example.smsrly.exception.InputException;
+import com.example.smsrly.utilities.EmailType;
+import com.example.smsrly.utilities.Util;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -13,52 +11,42 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import static com.example.smsrly.utilities.EmailType.CONFIRMATION_EMAIL;
 
 @Service
 @RequiredArgsConstructor
 public class EmailServices extends SimpleMailMessage {
 
-    private final VerificationEmailCodeService verificationEmailCodeService;
-    private final ResetPasswordCodeRepository resetPasswordCodeRepository;
+    private final OTPService otpService;
     private final JavaMailSender mailSender;
+    private final Util util;
 
-    public Response sendEmail(User user, int generatedCode, String type) {
 
-        if (type.equals("confirmationEmail")) {
-            VerificationEmailCode verificationEmailCode = new VerificationEmailCode(
-                    generatedCode,
-                    LocalDateTime.now(),
-                    LocalDateTime.now().plusMinutes(15),
-                    user);
-            verificationEmailCodeService.saveVerificationCode(verificationEmailCode);
-        } else {
-            ResetPasswordCode resetPasswordCode = new ResetPasswordCode(
-                    generatedCode,
-                    LocalDateTime.now(),
-                    LocalDateTime.now().plusMinutes(15),
-                    user);
-            resetPasswordCodeRepository.save(resetPasswordCode);
+    public String sendEmail(String userFirstName, String userLastName, String userEmail, EmailType type) throws MessagingException {
+        String OTPKey = util.extractUserNameFromEmail(userEmail);
 
+        if (otpService.isOTPCodeExists(OTPKey)) {
+            throw new InputException(util.getMessage("otp.time.limitation"));
         }
+
+        Integer OTPCode = otpService.generateOTP(OTPKey);
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper messageTemplate =
                     new MimeMessageHelper(message, "utf-8");
-            messageTemplate.setText(confirmationEmailTemplate(user.getFirstName() + " " + user.getLastName(), generatedCode), true);
-            messageTemplate.setText(type.equals("confirmationEmail") ?
-                    confirmationEmailTemplate(user.getFirstName() + " " + user.getLastName(), generatedCode) :
-                    resetPasswordTemplate(user.getFirstName() + " " + user.getLastName(), generatedCode), true);
-            messageTemplate.setTo(user.getEmail());
-            messageTemplate.setSubject(type.equals("confirmationEmail") ? "Confirm your email" : "Reset your password");
+            messageTemplate.setText(type.equals(CONFIRMATION_EMAIL) ?
+                    confirmationEmailTemplate(userFirstName + " " + userLastName, OTPCode) :
+                    resetPasswordTemplate(userFirstName + " " + userLastName, OTPCode), true);
+            messageTemplate.setTo(userEmail);
+            messageTemplate.setSubject(type.equals(CONFIRMATION_EMAIL) ? "Confirm your email" : "Reset your password");
             messageTemplate.setFrom("smsrly2023@gmail.com");
             mailSender.send(message);
 
         } catch (MessagingException e) {
-            return Response.builder().message("failed to send email, " + e).build();
+            throw new MessagingException("failed to send email, " + e);
         }
-        return Response.builder().message("verification code sent").build();
+        return util.getMessage("verification.sent");
     }
 
     private String confirmationEmailTemplate(String userName, int code) {
@@ -69,7 +57,7 @@ public class EmailServices extends SimpleMailMessage {
                 "        <p style=\"color: #4d4d4d;\">Dear " + userName + ",</p>\n" +
                 "        <p style=\"color: #4d4d4d;\">Please use the following verification code to verify your email address:</p>\n" +
                 "        <p style=\"font-size: 24px; font-weight: bold; color: #3f51b5;\">" + code + "</p>\n" +
-                "        <p style=\"color: #4d4d4d;\">This code will expire after 15 minutes. Please use it as soon as possible.</p>\n" +
+                "        <p style=\"color: #4d4d4d;\">This code will expire after 10 minutes. Please use it as soon as possible.</p>\n" +
                 "        <p style=\"color: #4d4d4d;\">If you did not request this verification code, please ignore this email.</p>\n" +
                 "        <p style=\"color: #4d4d4d;\">Thank you for using our service!</p>\n" +
                 "        <p style=\"color: #4d4d4d;\">Best regards,</p>\n" +

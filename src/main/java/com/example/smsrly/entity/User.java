@@ -1,6 +1,5 @@
 package com.example.smsrly.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -24,9 +23,11 @@ import java.util.Set;
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
+
     @Column(name = "first_name", nullable = false)
     private String firstName;
+
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
@@ -36,72 +37,57 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
-    @Column(name = "phone_number", nullable = false)
-    private long phoneNumber;
-    @Column(nullable = false)
-    private double latitude;
+    @Column(name = "phone_number")
+    private String phoneNumber;
 
-    @Column(nullable = false)
-    private double longitude;
+    @Column
+    private Double latitude;
 
-    @Column(columnDefinition = "LONGTEXT")
+    @Column
+    private Double longitude;
+
+    @Column(columnDefinition = "LONGTEXT",name = "image_url")
     private String imageURL;
-    @JsonIgnore
-    private Boolean enable;
-    @JsonIgnore
+
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<RealEstate> uploads;
 
-    @JsonIgnore
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Save> save;
 
-    @JsonIgnore
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Request> userRequests;
-    @JsonIgnore
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<VerificationEmailCode> verificationEmailCodeList;
-    @JsonIgnore
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<ResetPasswordCode> resetPasswordCodeList;
-    @JsonIgnore
+
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Token> tokens;
 
-    @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return null;
     }
 
-    @JsonIgnore
     @Override
     public String getUsername() {
         return email;
     }
 
-    @JsonIgnore
     @Override
     public boolean isAccountNonExpired() {
         return true;
     }
 
-    @JsonIgnore
     @Override
     public boolean isAccountNonLocked() {
         return true;
     }
 
-    @JsonIgnore
     @Override
     public boolean isCredentialsNonExpired() {
         return true;
     }
 
-    @JsonIgnore
     @Override
     public boolean isEnabled() {
-        return enable;
+        return true;
     }
 }

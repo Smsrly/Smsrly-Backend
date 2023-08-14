@@ -14,7 +14,7 @@ import lombok.*;
 public class Storage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private long id;
     @Column(nullable = false, unique = true)
     private String name;
     @Column(nullable = false)

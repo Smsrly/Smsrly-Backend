@@ -1,9 +1,9 @@
 package com.example.smsrly.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table
@@ -17,13 +17,14 @@ public class Token {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private long id;
     @Column(nullable = false)
-    @NotEmpty(message = "Token must be not empty")
-    @NotNull(message = "Token must be not null")
     private String token;
     @Column(nullable = false)
     private boolean isExpired;
+
+    @Column(name = "expire_date", columnDefinition = "DATETIME", nullable = false)
+    private LocalDateTime expireDate;
 
     @ManyToOne
     @JoinColumn(name = "user_id")

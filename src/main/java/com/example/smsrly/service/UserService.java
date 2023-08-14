@@ -1,20 +1,22 @@
 package com.example.smsrly.service;
 
-import com.example.smsrly.entity.RealEstate;
-import com.example.smsrly.entity.Request;
+import com.example.smsrly.auth.RegistrationRequest;
+import com.example.smsrly.dto.*;
 import com.example.smsrly.entity.User;
-import com.example.smsrly.repository.RealEstateRepository;
-import com.example.smsrly.repository.RequestRepository;
+import com.example.smsrly.exception.InputException;
+import com.example.smsrly.repository.SaveRepository;
 import com.example.smsrly.repository.UserRepository;
-import com.example.smsrly.response.*;
+import com.example.smsrly.utilities.Response;
+import com.example.smsrly.utilities.Util;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -22,159 +24,92 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final SaveRepository saveRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final ValidatingService validatingService;
-    private final RealEstateRepository realEstateRepository;
-    private final RequestRepository requestRepository;
+    private final UserDTOMapper userDTOMapper;
+    private final UserRealEstateDTOMapper userRealEstateDTOMapper;
+    private final RequestDTOMapper requestDTOMapper;
+    private final SaveDTOMapper saveDTOMapper;
+    private final Util util;
 
-    public String extractEmailFromToken(String authHeader) {
-        String token = authHeader.substring(7);
+    public User getUserByEmail(String email) {
+        return userRepository.findUserByEmail(email).orElseThrow(() -> new InputException(util.getMessage("account.not.exists")));
+    }
+
+    public Boolean isUserExists(String email) {
+        return userRepository.findUserByEmail(email).isPresent();
+    }
+
+    public String extractUserEmail(String authHeader) {
+        String token = jwtService.extractToken(authHeader);
         return jwtService.extractEmail(token);
     }
 
-    public int getUserId(String authHeader) {
-        String userEmail = extractEmailFromToken(authHeader);
-        User user = userRepository.findUserByEmail(userEmail).orElseThrow(() -> new IllegalStateException("user with email " + userEmail + " not exists"));
-        return user.getId();
+    public UserDTO getUserInfo(String authHeader) {
+        String email = extractUserEmail(authHeader);
+
+        return userRepository.findUserByEmail(email)
+                .map(userDTOMapper)
+                .orElseThrow(() -> new InputException(util.getMessage("token.user.not.exists")));
     }
 
     public User getUser(String authHeader) {
-        String userEmail = extractEmailFromToken(authHeader);
-        return userRepository.findUserByEmail(userEmail).orElseThrow(() -> new IllegalStateException("user with email " + userEmail + " not exists"));
-    }
-
-    public UserResponse getUserInfo(String authHeader) {
-        User user = getUser(authHeader);
-        return UserResponse.builder()
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .email(user.getEmail())
-                .phoneNumber(user.getPhoneNumber())
-                .latitude(user.getLatitude())
-                .longitude(user.getLongitude())
-                .imageURL(user.getImageURL())
-                .build();
+        String userEmail = extractUserEmail(authHeader);
+        return userRepository.findUserByEmail(userEmail).orElseThrow(() -> new InputException(util.getMessage("token.user.not.exists")));
     }
 
     public Response deleteUser(String authHeader) {
-        userRepository.deleteById(getUserId(authHeader));
-        return Response.builder().message("user deleted").build();
+        User user = getUser(authHeader);
+        userRepository.deleteById(user.getId());
+        return Response.builder().message(util.getMessage("account.deleted")).build();
     }
 
     @Transactional
-    public Response updateUser(String authHeader, String email, String firstName, String lastName, String password, Optional<Long> phoneNumber, Optional<Double> latitude, Optional<Double> longitude, String image) {
+    public Response updateUser(String authHeader, RegistrationRequest request) {
 
-        User user = authHeader != null ? getUser(authHeader) : userRepository.findUserByEmail(email).orElseThrow(() -> new IllegalStateException("User not found"));
-
-        if (firstName != null && !firstName.equals(user.getFirstName())) {
-            String validationMessage = validatingService.validating(firstName, null, null, null, 0, 0, 0, null, 1);
-            if (validationMessage != "validated") {
-                return Response.builder().message(validationMessage).build();
-            }
-            user.setFirstName(firstName.replaceAll("\\s", ""));
-        }
-
-        if (lastName != null && !lastName.equals(user.getLastName())) {
-            String validationMessage = validatingService.validating(null, lastName, null, null, 0, 0, 0, null, 2);
-            if (validationMessage != "validated") {
-                return Response.builder().message(validationMessage).build();
-            }
-            user.setLastName(lastName.replaceAll("\\s", ""));
-        }
-
-        if (password != null && !passwordEncoder.matches(password, user.getPassword())) {
-
-            String validationMessage = validatingService.validating(null, null, null, password, 0, 0, 0, null, 4);
-
-            if (validationMessage != "validated") {
-                return Response.builder().message(validationMessage).build();
-            }
-
-            user.setPassword(passwordEncoder.encode(password));
-        }
-
-        if (phoneNumber.isPresent()) {
-            long phoneNum = phoneNumber.get();
-
-            String validationMessage = validatingService.validating(null, null, null, null, phoneNum, 0, 0, null, 5);
-            if (validationMessage != "validated") {
-                return Response.builder().message(validationMessage).build();
-            }
-
-            if (phoneNum != user.getPhoneNumber()) {
-                user.setPhoneNumber(phoneNum);
-            }
-        }
-
-        if (latitude.isPresent() && longitude.isPresent()) {
-            double lat = latitude.get();
-            double lon = longitude.get();
-
-            if (lat != user.getLatitude() || lon != user.getLongitude()) {
-
-                String validationMessage = validatingService.validating(null, null, null, null, 0, lat, lon, null, 6);
-                if (validationMessage != "validated") {
-                    return Response.builder().message(validationMessage).build();
-                }
-
-                user.setLatitude(lat);
-                user.setLongitude(lon);
-            }
-
-        }
-
-        return Response.builder().message("updated").build();
-    }
-
-
-    // need maintenance here
-    public List<UploadsRealEstateResponse> getUserUploads(String authHeader) {
         User user = getUser(authHeader);
 
-        List<RealEstate> realEstate = user.getUploads();
-        List<UploadsRealEstateResponse> realEstateResponseList = new ArrayList<>();
-
-        for (RealEstate estate : realEstate) {
-            realEstateResponseList.add(getRealEstateRequestedBy(estate.getId()));
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new InputException(util.getMessage("account.password.not.matched"));
         }
-        return realEstateResponseList;
+
+        if (!Objects.equals(request.getEmail(), user.getEmail())) {
+            throw new InputException(util.getMessage("account.changing.email.error"));
+        }
+
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setPhoneNumber(request.getPhoneNumber());
+        user.setLongitude(request.getLongitude());
+        user.setLatitude(request.getLatitude());
+        return Response.builder().message(util.getMessage("account.updated")).build();
     }
 
-    UploadsRealEstateResponse getRealEstateRequestedBy(int realEstateId) {
-        RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() ->
-                new IllegalStateException("realEstate with id " + realEstateId + " not exists"));
 
-        return UploadsRealEstateResponse.builder()
-                .id(realEstate.getId())
-                .title(realEstate.getTitle())
-                .bathroomNumber(realEstate.getBathroomNumber())
-                .description(realEstate.getDescription())
-                .floorNumber(realEstate.getFloorNumber())
-                .area(realEstate.getArea())
-                .price(realEstate.getPrice())
-                .longitude(realEstate.getLongitude())
-                .latitude(realEstate.getLatitude())
-                .roomNumber(realEstate.getRoomNumber())
-                .city(realEstate.getCity())
-                .country(realEstate.getCountry())
-                .isSale(realEstate.getIsSale())
-                .realEstateImages(realEstate.getRealEstateImages())
-                .RequestedBy(userInfoList(realEstateId))
-                .build();
+    public List<UserRealEstateDTO> getUserUploads(String authHeader) {
+        User user = getUser(authHeader);
+        return user.getUploads().stream()
+                .map(userRealEstateDTOMapper)
+                .collect(Collectors.toList());
     }
 
-    List<UserInfo> userInfoList(int realEstateId) {
-        List<Request> requests = requestRepository.getRequestsByRealEstateId(realEstateId);
-        List<UserInfo> userInfoList = new ArrayList<>();
-        for (Request request : requests) {
-            userInfoList.add(UserInfo.builder()
-                    .Name(request.getUser().getFirstName() + ' ' + request.getUser().getLastName())
-                    .image(request.getUser().getImageURL())
-                    .phoneNumber(request.getUser().getPhoneNumber())
-                    .build());
-        }
-        return userInfoList;
+
+    public List<RealEstateDTO> getUserRequests(String authHeader) {
+        User user = getUser(authHeader);
+        Set<Long> savedRealEstatesIds = saveRepository.findSavesByUserId(user.getId());
+        requestDTOMapper.setSavedRealEstatesIds(savedRealEstatesIds);
+
+        return user.getUserRequests().stream()
+                .map(requestDTOMapper)
+                .collect(Collectors.toList());
+    }
+
+    public List<RealEstateDTO> getUserSaves(String authHeader) {
+        User user = getUser(authHeader);
+        return user.getSave().stream()
+                .map(saveDTOMapper)
+                .collect(Collectors.toList());
     }
 
 }

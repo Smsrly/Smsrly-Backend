@@ -9,10 +9,10 @@ import java.util.Optional;
 import java.util.Set;
 
 @Repository
-public interface SaveRepository extends JpaRepository<Save, Integer> {
+public interface SaveRepository extends JpaRepository<Save, Long> {
     @Query(value = "SELECT * FROM save where real_estate_id = :realEstateId and user_id = :userId", nativeQuery = true)
-    Optional<Save> findSave(int realEstateId, int userId);
+    Optional<Save> findSave(long realEstateId, long userId);
 
     @Query(value = "SELECT real_estate_id FROM save where user_id = :userId", nativeQuery = true)
-    Set<Integer> findSavesByUserId(int userId);
+    Set<Long> findSavesByUserId(long userId);
 }

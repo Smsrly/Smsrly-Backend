@@ -9,11 +9,14 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface RealEstateImagesRepository extends JpaRepository<RealEstateImages, Integer> {
+public interface RealEstateImagesRepository extends JpaRepository<RealEstateImages, Long> {
+
+    @Query(value = "SELECT max(id) FROM real_estate_images", nativeQuery = true)
+    Integer getLastIdNumber();
 
     @Query(value = "SELECT * FROM real_estate_images WHERE real_estate_id = :realEstateId", nativeQuery = true)
-    List<RealEstateImages> findByRealEstateId(int realEstateId);
+    List<RealEstateImages> findByRealEstateId(long realEstateId);
 
-    @Query(value = "SELECT * FROM real_estate_images WHERE real_estate_imageurl = :imageURL", nativeQuery = true)
-    Optional<RealEstateImages> findByImageURL(String imageURL);
+    @Query(value = "SELECT * FROM real_estate_images WHERE name = :fileName", nativeQuery = true)
+    Optional<RealEstateImages> findByImageURL(String fileName);
 }

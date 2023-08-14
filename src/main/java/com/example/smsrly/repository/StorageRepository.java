@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface StorageRepository extends JpaRepository<Storage, Integer> {
+public interface StorageRepository extends JpaRepository<Storage, Long> {
     @Query(value = "SELECT * FROM storage WHERE name = :fileName", nativeQuery = true)
     Optional<Storage> findImageByName(String fileName);
 

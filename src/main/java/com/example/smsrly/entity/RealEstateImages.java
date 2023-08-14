@@ -1,7 +1,6 @@
 package com.example.smsrly.entity;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,14 +17,11 @@ public class RealEstateImages {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @JsonIgnore
-    private int id;
-    @JsonIgnore
+    private long id;
     @Column(nullable = false, unique = true)
     private String name;
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(columnDefinition = "LONGTEXT",name = "real_estate_image_url")
     String realEstateImageURL;
-    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "real_estate_id")
     private RealEstate realEstate;

@@ -1,10 +1,10 @@
 package com.example.smsrly.service;
 
-import com.example.smsrly.config.SecretKey;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +18,12 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    private final SecretKey secretKey = new SecretKey();
+    @Value("${application.security.jwt.secret-key}")
+    private String secretKey;
+    @Value("${application.security.jwt.expiration}")
+    private Long jwtExpiration;
+    @Value("${application.security.jwt.refresh-token.expiration}")
+    private Long refreshExpiration;
 
     public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -38,7 +43,7 @@ public class JwtService {
     }
 
     private Key getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey.getSECRET_KEY());
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
@@ -49,13 +54,26 @@ public class JwtService {
     public String generateToken(
             Map<String, Objects> extractClaims,
             UserDetails userDetails
+    ) {
+        return buildToken(extractClaims, userDetails, jwtExpiration);
+    }
 
+    public String generateRefreshToken(
+            UserDetails userDetails
+    ) {
+        return buildToken(new HashMap<>(), userDetails, refreshExpiration);
+    }
+
+    public String buildToken(
+            Map<String, Objects> extractClaims,
+            UserDetails userDetails,
+            Long expiration
     ) {
         return Jwts.builder()
                 .setClaims(extractClaims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 365))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignInKey())
                 .compact();
     }
@@ -73,4 +91,7 @@ public class JwtService {
         return extractClaim(token, Claims::getExpiration);
     }
 
+    public String extractToken(String authHeader) {
+        return authHeader.substring(7);
+    }
 }

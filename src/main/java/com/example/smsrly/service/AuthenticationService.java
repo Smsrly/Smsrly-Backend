@@ -1,266 +1,201 @@
 package com.example.smsrly.service;
 
-import com.example.smsrly.auth.AuthorizationRequest;
-import com.example.smsrly.auth.AuthenticationRequest;
-import com.example.smsrly.auth.AuthenticationResponse;
-import com.example.smsrly.auth.RegisterRequest;
-import com.example.smsrly.entity.ResetPasswordCode;
-import com.example.smsrly.entity.Token;
-import com.example.smsrly.entity.VerificationEmailCode;
+import com.example.smsrly.auth.*;
 import com.example.smsrly.entity.User;
-import com.example.smsrly.repository.TokenRepository;
+import com.example.smsrly.exception.InputException;
 import com.example.smsrly.repository.UserRepository;
-import com.example.smsrly.response.Response;
+import com.example.smsrly.utilities.Response;
+import com.example.smsrly.utilities.EmailType;
+import com.example.smsrly.utilities.Util;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 import lombok.*;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.Random;
+import java.io.IOException;
 import java.util.UUID;
+
+import static com.example.smsrly.utilities.EmailType.CONFIRMATION_EMAIL;
+import static com.example.smsrly.utilities.EmailType.RESET_PASSWORD;
 
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
 
-    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    private final VerificationEmailCodeService verificationEmailCodeService;
-    private final ResetPasswordService resetPasswordService;
+    private final JwtService jwtService;
     private final UserService userService;
     private final EmailServices emailServices;
-    private final TokenRepository tokenRepository;
-    private final ValidatingService validatingService;
+    private final TokenService tokenService;
+    private final OTPService otpService;
+    private final Util util;
+    private final UserRepository userRepository;
 
-    public int generateCode() {
-        Random random = new Random();
-        int code = 0;
-        while (code < 1000) {
-            code = random.nextInt(10000);
-        }
-        return code;
-    }
+    public AuthenticationResponse signup(RegistrationRequest request, Integer otp) {
 
-    private void saveToken(User user, String generateToken) {
-        var token = Token.builder()
-                .token(generateToken)
-                .isExpired(false)
-                .user(user)
-                .build();
-        tokenRepository.save(token);
-    }
-
-    private void expireAllTokens(User user) {
-        var userValidToken = tokenRepository.getAllValidTokens(user.getId());
-        if (userValidToken.isEmpty()) return;
-
-        userValidToken.forEach(token -> token.setExpired(true));
-
-    }
-
-
-    public Response register(RegisterRequest request) {
-
-        int generatedCode = generateCode();
-
-        Optional<User> userEmail = userRepository.findUserByEmail(request.getEmail());
-
-        if (userEmail.isPresent() && userEmail.get().isEnabled()) {
-            return Response.builder().message("email is already inserted into DB").build();
+        if (otp < 1000 || otp > 9999) {
+            throw new InputException(util.getMessage("otp.validation"));
         }
 
-        String validationMessage = validatingService.validating(request.getFirstname(), request.getLastname(), request.getEmail(), request.getPassword(), request.getPhoneNumber(), request.getLatitude(), request.getLongitude(), null, 0);
-        if (validationMessage != "validated") {
-            return Response.builder().message(validationMessage).build();
+        String OTPKey = util.extractUserNameFromEmail(request.getEmail());
+
+        if (userService.isUserExists(request.getEmail())) {
+            throw new InputException(util.getMessage("account.exists"));
         }
 
-        if (userEmail.isPresent() && !userEmail.get().isEnabled() && verificationEmailCodeService.checkIfCodeExpiredOrNot(userEmail.get().getId()).isEmpty()) {
-
-            userService.updateUser(null,
-                    userEmail.get().getEmail(),
-                    request.getFirstname().replaceAll("\\s", ""),
-                    request.getLastname().replaceAll("\\s", ""),
-                    request.getPassword(),
-                    Optional.of(request.getPhoneNumber()),
-                    Optional.of(request.getLatitude()),
-                    Optional.of(request.getLongitude()),
-                    null);
-
-            return emailServices.sendEmail(userEmail.get(), generatedCode, "confirmationEmail");
-        } else if (userEmail.isPresent() && !userEmail.get().isEnabled() && verificationEmailCodeService.checkIfCodeExpiredOrNot(userEmail.get().getId()).isPresent()) {
-            return Response.builder().message("try again after 15 min").build();
+        if (!otpService.isValidateOTP(OTPKey, otp)) {
+            throw new InputException(util.getMessage("otp.invalid"));
         }
 
-        var user = User.builder()
-                .firstName(request.getFirstname().replaceAll("\\s", ""))
-                .lastName(request.getLastname().replaceAll("\\s", ""))
+        User user = User.builder()
+                .firstName(request.getFirstName().replaceAll("\\s", ""))
+                .lastName(request.getLastName().replaceAll("\\s", ""))
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .phoneNumber(request.getPhoneNumber())
-                .longitude(request.getLongitude() == 0 ? 31.2357  : request.getLongitude())
-                .latitude(request.getLatitude() == 0 ? 30.0444 : request.getLatitude())
-                .enable(false)
+                .longitude(request.getLongitude())
+                .latitude(request.getLatitude())
                 .build();
-        userRepository.save(user);
-
-        return emailServices.sendEmail(user, generatedCode, "confirmationEmail");
+        return registration(user);
     }
 
-    public AuthenticationResponse authenticate(AuthenticationRequest request) {
-
-        Optional<User> user = userRepository.findUserByEmail(request.getEmail());
-
-        if (user.isEmpty()) {
-            return AuthenticationResponse.builder().message("email not found in DB").build();
-        }
-
-        if (!passwordEncoder.matches(request.getPassword(), user.get().getPassword())) {
-            return AuthenticationResponse.builder().message("invalid password, please try again or use forget password to reset password").build();
-        }
-
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
-
-        var jwtToken = jwtService.generateToken(user.get());
-        expireAllTokens(user.get());
-        saveToken(user.get(), jwtToken);
-        return AuthenticationResponse.builder()
-                .token(jwtToken)
-                .message("log in success")
-                .build();
+    public Response verifyEmail(OTPRequest request) throws MessagingException {
+        return Response.builder().message(userService.isUserExists(request.getEmail()) ? util.getMessage("account.verified") : sendOTP(request, CONFIRMATION_EMAIL)).build();
     }
 
-    @Transactional
-    public AuthenticationResponse emailConfirmationCode(String email, int code) {
-        User user = userRepository.findUserByEmail(email).orElseThrow(() -> new IllegalStateException("user not found"));
-
-        Optional<VerificationEmailCode> verificationEmailCode = verificationEmailCodeService
-                .getCode(code, user.getId());
-
-        if (verificationEmailCode.isEmpty()) {
-            return AuthenticationResponse.builder().message("code is invalid").build();
+    public AuthenticationResponse login(AuthenticationRequest authenticationRequest) {
+        User user = userService.getUserByEmail(authenticationRequest.getEmail());
+        if (!passwordEncoder.matches(authenticationRequest.getPassword(), user.getPassword())) {
+            throw new InputException(util.getMessage("account.password.incorrect"));
         }
 
-        if (verificationEmailCode.get().getConfirmedAt() != null) {
-            return AuthenticationResponse.builder()
-                    .message("email already confirmed")
+        return authentication(user, authenticationRequest.getPassword());
+    }
+
+    public AuthenticationResponse authorization(AuthorizationRequest request) {
+        if (userService.isUserExists(request.getEmail())) {
+            User user = userService.getUserByEmail(request.getEmail());
+            return authentication(user, null);
+        } else {
+
+            if (request.getImageURL() != null && !util.isValidURL(request.getImageURL())) {
+                throw new InputException(util.getMessage("account.image.url.invalid"));
+            }
+
+            User user = User.builder()
+                    .firstName(request.getFirstName())
+                    .lastName(request.getLastName())
+                    .email(request.getEmail())
+                    .imageURL(request.getImageURL())
+                    .longitude(null)
+                    .latitude(null)
+                    .phoneNumber(null)
+                    .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                     .build();
+            return registration(user);
         }
-
-        LocalDateTime expiredAt = verificationEmailCode.get().getExpiredAt();
-
-        if (expiredAt.isBefore(LocalDateTime.now())) {
-            return AuthenticationResponse.builder()
-                    .message("code expired")
-                    .build();
-        }
-
-        verificationEmailCodeService.setConfirmedAt(code, user.getId());
-        userRepository.enableUser(verificationEmailCode.get().getUser().getEmail());
-        var jwtToken = jwtService.generateToken(user);
-        expireAllTokens(user);
-        saveToken(user, jwtToken);
-        return AuthenticationResponse.builder()
-                .token(jwtToken)
-                .message("activated")
-                .build();
     }
 
-    public Response resetPassword(String userEmail) {
-        int generatedCode = generateCode();
-        Optional<User> user = userRepository.findUserByEmail(userEmail);
-        if (user.isEmpty()) {
-            return Response.builder().message("email not exists in database").build();
-        }
+    public Response resetPassword(String email) throws MessagingException {
+        User user = userService.getUserByEmail(email);
 
-        resetPasswordService.expireAllRequestedCode(user.get().getId());
-
-        return emailServices.sendEmail(user.get(), generatedCode, "resetPassword");
+        return Response.builder()
+                .message(
+                        sendOTP(
+                                OTPRequest.builder()
+                                        .firstName(user.getFirstName())
+                                        .lastName(user.getLastName())
+                                        .email(user.getEmail())
+                                        .build(),
+                                RESET_PASSWORD
+                        )
+                ).build();
     }
 
-    @Transactional
     public AuthenticationResponse passwordConfirmationCode(String email, int code) {
-        User user = userRepository.findUserByEmail(email).orElseThrow(() -> new IllegalStateException("user not found"));
+        User user = userService.getUserByEmail(email);
+        String OTPKey = util.extractUserNameFromEmail(email);
 
-        Optional<ResetPasswordCode> resetPasswordCode = resetPasswordService
-                .getCode(code, user.getId());
-
-        if (resetPasswordCode.isEmpty()) {
-            return AuthenticationResponse.builder().message("code is invalid").build();
+        if (!otpService.isValidateOTP(OTPKey, code)) {
+            throw new InputException(util.getMessage("otp.invalid"));
         }
 
-        if (resetPasswordCode.get().getExpiredAt().isBefore(LocalDateTime.now()) || resetPasswordCode.get().getConfirmedAt() != null) {
-            return AuthenticationResponse.builder().message("code is expired").build();
-        }
-
-        resetPasswordService.setExpired(code, user.getId());
-        var jwtToken = jwtService.generateToken(user);
-        expireAllTokens(user);
-        saveToken(user, jwtToken);
-        return AuthenticationResponse.builder()
-                .token(jwtToken)
-                .message("code confirmed")
-                .build();
+        return tokenService.generateTokens(user);
     }
 
     @Transactional
     public Response updateUserPassword(String authHeader, String password) {
         User user = userService.getUser(authHeader);
-
-        String validationMessage = validatingService.validating(null, null, null, password, 0, 0, 0, null, 4);
-        if (validationMessage != "validated") {
-            return Response.builder().message(validationMessage).build();
+        if (!util.isValidPassword(password)) {
+            throw new InputException(util.getMessage("account.password.weak"));
         }
-
         user.setPassword(passwordEncoder.encode(password));
-        return Response.builder().message("password updated").build();
+        return Response.builder().message(util.getMessage("account.password.updated")).build();
     }
 
-    public AuthenticationResponse authorization(AuthorizationRequest request) {
-
-        if (!request.getEmail().contains("@gmail.com")) {
-            return AuthenticationResponse.builder().message("Email is not valid").build();
+    public void refreshToken(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) throws IOException {
+        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        final String refreshToken;
+        final String userEmail;
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new InputException(util.getMessage("token.invalid"));
         }
 
-        String validationMessage = validatingService.validating(null, null, null, null, 0, 0, 0, request.getImageURL(), 7);
-        if (validationMessage != "validated") {
-            return AuthenticationResponse.builder().message(validationMessage).build();
+        refreshToken = jwtService.extractToken(authHeader);
+
+        if (tokenService.isAccessTokenExists(refreshToken)) {
+            throw new InputException(util.getMessage("token.access"));
         }
 
-        Optional<User> userEmail = userRepository.findUserByEmail(request.getEmail());
+        userEmail = jwtService.extractEmail(refreshToken);
 
-        if (userEmail.isPresent()) {
-            var jwtToken = jwtService.generateToken(userEmail.get());
-            expireAllTokens(userEmail.get());
-            saveToken(userEmail.get(), jwtToken);
-            return AuthenticationResponse.builder().token(jwtToken).message("log in successfully").build();
+        if (userEmail != null) {
+            User user = userService.getUserByEmail(userEmail);
+            if (jwtService.isTokenValid(refreshToken, user)) {
+                var authResponse = tokenService.generateAccessToken(user, refreshToken);
+                new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
+            } else {
+                throw new InputException(util.getMessage("token.invalid"));
+            }
+        } else {
+            throw new InputException(util.getMessage("token.user.not.exists"));
         }
+    }
 
-        var user = User.builder()
-                .firstName(request.getFirstname())
-                .lastName(request.getLastname())
-                .email(request.getEmail())
-                .imageURL(request.getImageURL())
-                .longitude(31.2357)
-                .latitude(30.0444)
-                .phoneNumber(0)
-                .password(passwordEncoder.encode(UUID.randomUUID().toString()))
-                .enable(true)
-                .build();
+    private String sendOTP(OTPRequest request, EmailType type) throws MessagingException {
+        return emailServices.sendEmail(
+                request.getFirstName(),
+                request.getLastName(),
+                request.getEmail(),
+                type
+        );
+    }
 
+    private AuthenticationResponse registration(User user) {
         userRepository.save(user);
-        var jwtToken = jwtService.generateToken(user);
-        saveToken(user, jwtToken);
-        return AuthenticationResponse.builder().token(jwtToken).message("log in successfully").build();
+        return tokenService.generateTokens(user);
+    }
+
+    private AuthenticationResponse authentication(User user, String userPassword) {
+        if (userPassword != null) {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            user.getEmail(),
+                            userPassword
+                    )
+            );
+        }
+        return tokenService.generateTokens(user);
     }
 }

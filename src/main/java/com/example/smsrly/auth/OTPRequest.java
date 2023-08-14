@@ -13,18 +13,14 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthorizationRequest {
-
+public class OTPRequest {
     @NotBlank(message = "first name must be not blank")
     @JsonProperty("first_name")
-    private String firstName;
+    String firstName;
     @NotBlank(message = "last name must be not blank")
     @JsonProperty("last_name")
-    private String lastName;
+    String lastName;
+    @Email(message = "email must be like test@test.com")
     @NotBlank(message = "email must be not blank")
-    @Email(message = "email is not valid")
-    private String email;
-    @JsonProperty("image_url")
-    private String imageURL;
-
+    String email;
 }

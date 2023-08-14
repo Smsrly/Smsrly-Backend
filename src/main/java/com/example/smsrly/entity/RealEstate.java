@@ -1,14 +1,8 @@
 package com.example.smsrly.entity;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,16 +15,15 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties({"hibernateLazyInitializer"})
+@Builder
 public class RealEstate {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private long id;
     @Column(nullable = false)
-    @NotBlank(message = "title must be not blank")
     private String title;
     @Column(nullable = false)
-    @NotBlank(message = "description must be not blank")
     private String description;
     @Column(nullable = false)
     private double area;
@@ -46,10 +39,8 @@ public class RealEstate {
     private double latitude;
     @Column(nullable = false)
     private double longitude;
-    @NotBlank(message = "city must be not blank")
     @Column(nullable = false)
     private String city;
-    @NotBlank(message = "country must be not blank")
     @Column(nullable = false)
     private String country;
     @Column(nullable = false)
@@ -57,12 +48,10 @@ public class RealEstate {
     @OneToMany(mappedBy = "realEstate", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<RealEstateImages> realEstateImages;
 
-    @JsonIgnore
     @Column(name = "date_uploaded", columnDefinition = "DATETIME", nullable = false)
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+//    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime dateUploaded;
 
-    @JsonIgnore
     @OneToMany(mappedBy = "realEstate", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Request> realEstateRequest;
 
@@ -70,7 +59,6 @@ public class RealEstate {
     @JoinColumn(name = "owner_id")
     private User user;
 
-    @JsonIgnore
     @OneToMany(mappedBy = "realEstate", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Save> save;
 }

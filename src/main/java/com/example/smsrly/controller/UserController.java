@@ -1,17 +1,17 @@
 package com.example.smsrly.controller;
 
-import com.example.smsrly.entity.RealEstate;
-import com.example.smsrly.response.Response;
-import com.example.smsrly.response.UploadsRealEstateResponse;
-import com.example.smsrly.response.UserResponse;
-import com.example.smsrly.service.StorageService;
+import com.example.smsrly.auth.RegistrationRequest;
+import com.example.smsrly.dto.RealEstateDTO;
+import com.example.smsrly.dto.UserDTO;
+import com.example.smsrly.dto.UserRealEstateDTO;
+import com.example.smsrly.utilities.Response;
 import com.example.smsrly.service.UserService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping(path = "/user")
@@ -21,31 +21,33 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    public UserResponse getUser(@RequestHeader("Authorization") String authHeader) {
-        return userService.getUserInfo(authHeader);
+    public ResponseEntity<UserDTO> getUser(@RequestHeader("Authorization") String authHeader) {
+        return ResponseEntity.ok(userService.getUserInfo(authHeader));
     }
 
     @DeleteMapping
-    public Response deleteUser(@RequestHeader("Authorization") String authHeader) {
-        return userService.deleteUser(authHeader);
+    public ResponseEntity<Response> deleteUser(@RequestHeader("Authorization") String authHeader) {
+        return ResponseEntity.ok(userService.deleteUser(authHeader));
     }
 
     @PutMapping
-    public Response updateUser(@RequestHeader("Authorization") String authHeader,
-                               @RequestParam(required = false) String firstName,
-                               @RequestParam(required = false) String lastName,
-                               @RequestParam(required = false) String password,
-                               @RequestParam(required = false) Optional<Long> phoneNumber,
-                               @RequestParam(required = false) Optional<Double> latitude,
-                               @RequestParam(required = false) Optional<Double> longitude,
-                               @RequestParam(required = false) String image) {
-        return userService.updateUser(authHeader, null, firstName, lastName, password, phoneNumber, latitude, longitude, image);
+    public ResponseEntity<Response> updateUser(@RequestHeader("Authorization") String authHeader, @RequestBody @Valid RegistrationRequest request) {
+        return ResponseEntity.ok(userService.updateUser(authHeader, request));
     }
 
+    @GetMapping("uploads")
+    public ResponseEntity<List<UserRealEstateDTO>> getUserUploads(@RequestHeader("Authorization") String authHeader) {
+        return ResponseEntity.ok(userService.getUserUploads(authHeader));
+    }
 
-    @GetMapping(path = "/uploads")
-    public List<UploadsRealEstateResponse> getUserUploads(@RequestHeader("Authorization") String authHeader) {
-        return userService.getUserUploads(authHeader);
+    @GetMapping("requests")
+    public ResponseEntity<List<RealEstateDTO>> getUserRequests(@RequestHeader("Authorization") String authHeader) {
+        return ResponseEntity.ok(userService.getUserRequests(authHeader));
+    }
+
+    @GetMapping("saves")
+    public ResponseEntity<List<RealEstateDTO>> getUserSaves(@RequestHeader("Authorization") String authHeader) {
+        return ResponseEntity.ok(userService.getUserSaves(authHeader));
     }
 
 }

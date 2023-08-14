@@ -1,4 +1,4 @@
-package com.example.smsrly.response;
+package com.example.smsrly.handler;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -24,6 +24,6 @@ public class ValidationHandlerResponse extends ResponseEntityExceptionHandler {
             String message = objectError.getDefaultMessage();
             errors.put(fieldName, message);
         });
-        return new ResponseEntity<Object>(errors, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 }

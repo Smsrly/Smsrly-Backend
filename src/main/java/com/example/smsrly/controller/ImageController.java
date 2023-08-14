@@ -1,11 +1,9 @@
 package com.example.smsrly.controller;
 
 
-import com.example.smsrly.response.Response;
+import com.example.smsrly.utilities.Response;
 import com.example.smsrly.service.StorageService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,27 +17,24 @@ public class ImageController {
 
     private final StorageService storageService;
 
-    @PostMapping
-    public Response upload(@RequestParam("image") MultipartFile file, @RequestParam(value = "email") String email) throws IOException {
-        return storageService.uploadImage(file, email);
+    @PostMapping("user")
+    public ResponseEntity<Response> upload(@RequestHeader("Authorization") String authHeader,
+                                           @RequestParam("image") MultipartFile file) throws IOException {
+        return ResponseEntity.ok(storageService.uploadImage(authHeader, file));
     }
 
-    @PostMapping(path = "realEstate")
-    public Response upload(@RequestParam("image") MultipartFile[] files, @RequestParam(value = "RealEstateId") int realEstateId) throws IOException {
-        return storageService.uploadImage(files, realEstateId);
+    @PostMapping(path = "real-estate/{id}")
+    public ResponseEntity<Response> upload(@RequestHeader("Authorization") String authHeader,
+                                           @RequestParam("image") MultipartFile[] files,
+                                           @PathVariable(value = "id") long realEstateId) throws IOException {
+        return ResponseEntity.ok(storageService.uploadImage(authHeader, files, realEstateId));
     }
 
-//    @DeleteMapping(path = "/{deleteType}/{fileName}")
-//    public Response delete(@PathVariable("deleteType") String deleteType, @PathVariable("fileName") String fileName) {
-//        return storageService.deleteImage(fileName, deleteType);
-//    }
-
-    @GetMapping(path = "{fileName}")
-    public ResponseEntity<?> download(@PathVariable("fileName") String fileName) throws IOException {
-        byte[] imageData = storageService.downloadImage(fileName);
-        return ResponseEntity.status(HttpStatus.OK)
-                .contentType(MediaType.valueOf("image/png"))
-                .body(imageData);
+    @DeleteMapping(path = "/{deleteType}/{fileName}")
+    public ResponseEntity<Response> delete(@RequestHeader("Authorization") String authHeader,
+                                           @PathVariable("deleteType") String deleteType,
+                                           @PathVariable("fileName") String fileName) {
+        return ResponseEntity.ok(storageService.deleteImage(authHeader, fileName, deleteType));
     }
 
 }
