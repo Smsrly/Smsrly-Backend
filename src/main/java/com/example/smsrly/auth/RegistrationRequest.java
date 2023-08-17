@@ -15,17 +15,12 @@ import lombok.NoArgsConstructor;
 public class RegistrationRequest {
 
     @NotBlank(message = "first name must be not blank")
-    @JsonProperty("first_name")
-    private String firstName;
+    private String firstname;
     @NotBlank(message = "last name must be not blank")
-    @JsonProperty("last_name")
-    private String lastName;
+    private String lastname;
     @Email(message = "email must be like test@test.com")
     @NotBlank(message = "email must be not blank")
     private String email;
-    @NotBlank(message = "password must be not blank")
-    @Size(min = 8, message = "password should have at least 8 characters")
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#^_])[A-Za-z\\d@$!%*?&#^_]+$", message = "password should contain at least one uppercase letter, one lowercase letter, one digit, and one special character")
     private String password;
     @Pattern(regexp = "^\\+(?:[0-9] ?){6,14}[0-9]$", message = "phone number must be like +20 101 234 5678")
     @JsonProperty("phone_number")

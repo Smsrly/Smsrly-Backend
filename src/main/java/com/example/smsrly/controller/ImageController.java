@@ -26,14 +26,14 @@ public class ImageController {
     @PostMapping(path = "real-estate/{id}")
     public ResponseEntity<Response> upload(@RequestHeader("Authorization") String authHeader,
                                            @RequestParam("image") MultipartFile[] files,
-                                           @PathVariable(value = "id") long realEstateId) throws IOException {
+                                           @PathVariable("id") long realEstateId) throws IOException {
         return ResponseEntity.ok(storageService.uploadImage(authHeader, files, realEstateId));
     }
 
-    @DeleteMapping(path = "/{deleteType}/{fileName}")
+    @DeleteMapping(path = "/{deleteType}/{filename}")
     public ResponseEntity<Response> delete(@RequestHeader("Authorization") String authHeader,
                                            @PathVariable("deleteType") String deleteType,
-                                           @PathVariable("fileName") String fileName) {
+                                           @PathVariable("filename") String fileName) {
         return ResponseEntity.ok(storageService.deleteImage(authHeader, fileName, deleteType));
     }
 

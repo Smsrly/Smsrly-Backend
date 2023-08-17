@@ -1,17 +1,15 @@
 package com.example.smsrly.controller;
 
 import com.example.smsrly.auth.RegistrationRequest;
-import com.example.smsrly.dto.RealEstateDTO;
 import com.example.smsrly.dto.UserDTO;
-import com.example.smsrly.dto.UserRealEstateDTO;
+import com.example.smsrly.utilities.PagingResponse;
 import com.example.smsrly.utilities.Response;
 import com.example.smsrly.service.UserService;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping(path = "/user")
@@ -21,8 +19,10 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    public ResponseEntity<UserDTO> getUser(@RequestHeader("Authorization") String authHeader) {
-        return ResponseEntity.ok(userService.getUserInfo(authHeader));
+    public ResponseEntity<UserDTO> getUser(@RequestHeader("Authorization") String authHeader,
+                                           @RequestParam(defaultValue = "0") int page,
+                                           @RequestParam(defaultValue = "5") int size) {
+        return ResponseEntity.ok(userService.getUserInfo(authHeader, page, size));
     }
 
     @DeleteMapping
@@ -31,23 +31,30 @@ public class UserController {
     }
 
     @PutMapping
-    public ResponseEntity<Response> updateUser(@RequestHeader("Authorization") String authHeader, @RequestBody @Valid RegistrationRequest request) {
+    public ResponseEntity<Response> updateUser(@RequestHeader("Authorization") String authHeader,
+                                               @RequestBody @Valid RegistrationRequest request) {
         return ResponseEntity.ok(userService.updateUser(authHeader, request));
     }
 
     @GetMapping("uploads")
-    public ResponseEntity<List<UserRealEstateDTO>> getUserUploads(@RequestHeader("Authorization") String authHeader) {
-        return ResponseEntity.ok(userService.getUserUploads(authHeader));
+    public ResponseEntity<PagingResponse> getUserUploads(@RequestHeader("Authorization") String authHeader,
+                                                         @RequestParam(defaultValue = "0") int page,
+                                                         @RequestParam(defaultValue = "5") int size) {
+        return ResponseEntity.ok(userService.getUserUploads(authHeader, page, size));
     }
 
     @GetMapping("requests")
-    public ResponseEntity<List<RealEstateDTO>> getUserRequests(@RequestHeader("Authorization") String authHeader) {
-        return ResponseEntity.ok(userService.getUserRequests(authHeader));
+    public ResponseEntity<PagingResponse> getUserRequests(@RequestHeader("Authorization") String authHeader,
+                                                          @RequestParam(defaultValue = "0") int page,
+                                                          @RequestParam(defaultValue = "5") int size) {
+        return ResponseEntity.ok(userService.getUserRequests(authHeader, page, size));
     }
 
     @GetMapping("saves")
-    public ResponseEntity<List<RealEstateDTO>> getUserSaves(@RequestHeader("Authorization") String authHeader) {
-        return ResponseEntity.ok(userService.getUserSaves(authHeader));
+    public ResponseEntity<PagingResponse> getUserSaves(@RequestHeader("Authorization") String authHeader,
+                                                       @RequestParam(defaultValue = "0") int page,
+                                                       @RequestParam(defaultValue = "5") int size) {
+        return ResponseEntity.ok(userService.getUserSaves(authHeader, page, size));
     }
 
 }

@@ -2,10 +2,7 @@ package com.example.smsrly.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -25,11 +22,11 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "first_name", nullable = false)
-    private String firstName;
+    @Column(nullable = false)
+    private String firstname;
 
-    @Column(name = "last_name", nullable = false)
-    private String lastName;
+    @Column(nullable = false)
+    private String lastname;
 
     @Column(nullable = false)
     private String email;
@@ -46,7 +43,7 @@ public class User implements UserDetails {
     @Column
     private Double longitude;
 
-    @Column(columnDefinition = "LONGTEXT",name = "image_url")
+    @Column(columnDefinition = "LONGTEXT", name = "image_url")
     private String imageURL;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)

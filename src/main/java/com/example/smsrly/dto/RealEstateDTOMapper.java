@@ -1,17 +1,14 @@
 package com.example.smsrly.dto;
 
 import com.example.smsrly.entity.RealEstate;
-import com.example.smsrly.entity.RealEstateImages;
-import lombok.AllArgsConstructor;
+import com.example.smsrly.entity.RealEstateImage;
 import lombok.Setter;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
 public class RealEstateDTOMapper implements Function<RealEstate, RealEstateDTO> {
 
     @Setter
@@ -34,8 +31,8 @@ public class RealEstateDTOMapper implements Function<RealEstate, RealEstateDTO> 
                 realEstate.getCountry(),
                 realEstate.getIsSale(),
                 realEstate.getRealEstateImages().stream()
-                        .map(RealEstateImages::getRealEstateImageURL)
-                        .collect(Collectors.toList()),
+                        .map(RealEstateImage::getImageURL)
+                        .toList(),
                 savedRealEstatesIds.contains(realEstate.getId())
         );
     }

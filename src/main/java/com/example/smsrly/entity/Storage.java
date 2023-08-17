@@ -16,9 +16,9 @@ public class Storage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
     @Column(nullable = false, unique = true)
-    private String name;
+    private String filename;
     @Column(nullable = false)
-    private String type;
+    private String filetype;
     @Column(nullable = false)
-    private String path;
+    private String filepath;
 }

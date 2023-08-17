@@ -1,18 +1,21 @@
 package com.example.smsrly.dto;
 
 import com.example.smsrly.entity.RealEstate;
-import com.example.smsrly.entity.RealEstateImages;
-import lombok.AllArgsConstructor;
+import com.example.smsrly.entity.RealEstateImage;
+import com.example.smsrly.repository.RequestRepository;
+import lombok.Setter;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
 public class UserRealEstateDTOMapper implements Function<RealEstate, UserRealEstateDTO> {
 
+    @Setter
+    private Pageable pageable;
     private final UserRequestDTOMapper userRequestDTOMapper;
+    private final RequestRepository requestRepository;
 
     @Override
     public UserRealEstateDTO apply(RealEstate realEstate) {
@@ -30,12 +33,19 @@ public class UserRealEstateDTOMapper implements Function<RealEstate, UserRealEst
                 realEstate.getCity(),
                 realEstate.getCountry(),
                 realEstate.getIsSale(),
-                realEstate.getRealEstateImages().stream()
-                        .map(RealEstateImages::getRealEstateImageURL)
-                        .collect(Collectors.toList()),
-                realEstate.getRealEstateRequest().stream()
+                realEstate.getRealEstateImages()
+                        .stream()
+                        .map(RealEstateImage::getImageURL)
+                        .toList(),
+                requestRepository.findRequestsByRealEstateId(realEstate.getId(), pageable)
+                        .stream()
                         .map(userRequestDTOMapper)
-                        .collect(Collectors.toSet())
+                        .toList()
         );
+    }
+
+    public UserRealEstateDTOMapper(UserRequestDTOMapper userRequestDTOMapper, RequestRepository requestRepository) {
+        this.userRequestDTOMapper = userRequestDTOMapper;
+        this.requestRepository = requestRepository;
     }
 }

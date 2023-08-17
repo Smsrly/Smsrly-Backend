@@ -2,8 +2,10 @@ package com.example.smsrly.utilities;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,12 +28,8 @@ public class Util {
     public boolean isValidPassword(String password) {
 
         // Password length should be greater than 8 characters
-        if (password.length() < 8) {
-            return false;
-        }
-
         // Password should contain at least one uppercase letter, one lowercase letter, one digit, and one special character
-        Pattern pattern = Pattern.compile("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#^_])[A-Za-z\\d@$!%*?&#^_]+$");
+        Pattern pattern = Pattern.compile("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#^_]).{8,}$");
         Matcher matcher = pattern.matcher(password);
 
         return matcher.matches();
@@ -50,4 +48,12 @@ public class Util {
         return messageSource.getMessage(code, null, Locale.getDefault());
     }
 
+    public PagingResponse pagingResponse(Slice<?> pages, List<?> content) {
+        return PagingResponse.builder()
+                .pageNo(pages.getNumber())
+                .pageSize(pages.getNumberOfElements())
+                .last(pages.isLast())
+                .content(content)
+                .build();
+    }
 }

@@ -1,7 +1,7 @@
 package com.example.smsrly.service;
 
 import com.example.smsrly.entity.RealEstate;
-import com.example.smsrly.entity.RealEstateImages;
+import com.example.smsrly.entity.RealEstateImage;
 import com.example.smsrly.entity.Storage;
 import com.example.smsrly.entity.User;
 import com.example.smsrly.exception.InputException;
@@ -49,14 +49,15 @@ public class StorageService {
         String renameFile = util.extractUserNameFromEmail(user.getEmail()) + '.' + fileExtension;
         String filePath = USER_FOLDER_PATH + renameFile;
 
-        if (storageRepository.findImageByName(renameFile).isPresent()) {
+        if (storageRepository.findImageByFilename(renameFile).isPresent()) {
             throw new InputException(util.getMessage("account.image.exists"));
         }
 
         storageRepository.save(Storage.builder()
-                .name(renameFile)
-                .type(file.getContentType())
-                .path(filePath).build());
+                .filename(renameFile)
+                .filetype(file.getContentType())
+                .filepath(filePath)
+                .build());
 
         user.setImageURL(BASE_URL + "auth/image/" + renameFile);
 
@@ -78,9 +79,9 @@ public class StorageService {
             throw new InputException(util.getMessage("real.estate.not.owner"));
         }
 
-        int numberOfUploadedRealEstates = realEstateImagesRepository.findByRealEstateId(realEstateId).size();
+        int numberOfUploadedRealEstateImages = realEstateImagesRepository.findRealEstateImagesByRealEstate(realEstate).size();
 
-        if ((numberOfUploadedRealEstates + files.length) > 20) {
+        if ((numberOfUploadedRealEstateImages + files.length) > 20) {
             throw new InputException(util.getMessage("real.estate.upload.image.limit"));
         }
 
@@ -88,7 +89,7 @@ public class StorageService {
 
             String fileExtension = com.google.common.io.Files.getFileExtension(Objects.requireNonNull(file.getOriginalFilename()));
 
-            int imageNumber = realEstateImagesRepository.getLastIdNumber() == null ? 0 : realEstateImagesRepository.getLastIdNumber();
+            int imageNumber = realEstateImagesRepository.findLastIdNumber() == null ? 0 : realEstateImagesRepository.findLastIdNumber();
 
             // Check if the file content type is an image type
             if (!file.getContentType().startsWith("image/")) {
@@ -99,12 +100,12 @@ public class StorageService {
             String filePath = REAL_ESTATE_FOLDER_PATH + renameFile;
 
             storageRepository.save(Storage.builder()
-                    .name(renameFile)
-                    .type(file.getContentType())
-                    .path(filePath)
+                    .filename(renameFile)
+                    .filetype(file.getContentType())
+                    .filepath(filePath)
                     .build());
 
-            realEstateImagesRepository.save(new RealEstateImages(renameFile, BASE_URL + "auth/image/" + renameFile, realEstate));
+            realEstateImagesRepository.save(new RealEstateImage(renameFile, BASE_URL + "auth/image/" + renameFile, realEstate));
 
             file.transferTo(new File(filePath));
 
@@ -114,34 +115,39 @@ public class StorageService {
     }
 
     public byte[] downloadImage(String fileName) throws IOException {
-        Storage fileData = storageRepository.findImageByName(fileName).orElseThrow(() -> new InputException("image with name " + fileName + " not found"));
-        String filePath = fileData.getPath();
+        Storage fileData = storageRepository.findImageByFilename(fileName).orElseThrow(() -> new InputException("image with file name " + fileName + " not found"));
+        String filePath = fileData.getFilepath();
         return Files.readAllBytes(new File(filePath).toPath());
     }
 
     @Transactional
-    public Response deleteImage(String authHeader, String fileName, String deleteType) {
+    public Response deleteImage(String authHeader, String filename, String deleteType) {
 
         User user = userService.getUser(authHeader);
-        Storage storage = storageRepository.findImageByName(fileName).orElseThrow(() -> new InputException("image with name " + fileName + " not found"));
-        String imagePath = storageRepository.findImagePathByImageName(fileName);
+        Storage storage = storageRepository.findImageByFilename(filename).orElseThrow(() -> new InputException("image with file name " + filename + " not found"));
+        String imagePath = storageRepository.findFilepathByFileName(filename);
         File file = new File(imagePath);
+
+        if (deleteType.equals("user")) {
+            if (user.getImageURL() == null || !user.getImageURL().contains(filename)) {
+                throw new InputException("image with file name " + filename + " not found");
+            }
+            user.setImageURL(null);
+        } else if (deleteType.equals("real-estate")) {
+            if (!filename.contains(util.extractUserNameFromEmail(user.getEmail()))) {
+                throw new InputException(util.getMessage("real.estate.not.owner"));
+            }
+            RealEstateImage realEstateImage = realEstateImagesRepository.findRealEstateImageByFilename(filename).orElseThrow(() -> new InputException("image with file name " + filename + " not found"));
+            System.out.println(realEstateImage.getFilename());
+            realEstateImagesRepository.delete(realEstateImage);
+        } else {
+            throw new InputException(util.getMessage("image.type.not.exists"));
+        }
+
         if (file.exists()) {
             file.delete();
         }
         storageRepository.delete(storage);
-
-        if (deleteType.equals("user")) {
-            user.setImageURL(null);
-        } else if (deleteType.equals("real-estate")) {
-            if (!fileName.contains(util.extractUserNameFromEmail(user.getEmail()))) {
-                throw new InputException(util.getMessage("real.estate.not.owner"));
-            }
-            RealEstateImages realEstateImages = realEstateImagesRepository.findByImageURL(fileName).orElseThrow(() -> new InputException("image with name " + fileName + " not found"));
-            realEstateImagesRepository.delete(realEstateImages);
-        } else {
-            throw new InputException(util.getMessage("image.type.not.exists"));
-        }
 
         return Response.builder().message(util.getMessage("account.image.deleted")).build();
     }

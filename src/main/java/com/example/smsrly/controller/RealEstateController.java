@@ -1,7 +1,7 @@
 package com.example.smsrly.controller;
 
-import com.example.smsrly.dto.RealEstateDTO;
-import com.example.smsrly.dto.UserRequestDTO;
+import com.example.smsrly.dao.SearchRequest;
+import com.example.smsrly.utilities.PagingResponse;
 import com.example.smsrly.utilities.RealEstateRequest;
 import com.example.smsrly.utilities.Response;
 import com.example.smsrly.service.RealEstateService;
@@ -9,8 +9,6 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping(path = "/real-estate")
@@ -20,8 +18,10 @@ public class RealEstateController {
     private final RealEstateService realEstateService;
 
     @GetMapping
-    public ResponseEntity<List<RealEstateDTO>> getRealEstates(@RequestHeader("Authorization") String authHeader) {
-        return ResponseEntity.ok(realEstateService.getRealEstates(authHeader));
+    public ResponseEntity<PagingResponse> getRealEstates(@RequestHeader("Authorization") String authHeader,
+                                                         @RequestParam(defaultValue = "0") int page,
+                                                         @RequestParam(defaultValue = "5") int size) {
+        return ResponseEntity.ok(realEstateService.getRealEstates(authHeader, page, size));
     }
 
     @PostMapping
@@ -44,8 +44,19 @@ public class RealEstateController {
     }
 
     @GetMapping(path = "{id}/requests")
-    public ResponseEntity<List<UserRequestDTO>> getRealEstateRequests(@RequestHeader("Authorization") String authHeader, @PathVariable(value = "id") long realEstateId) {
-        return ResponseEntity.ok(realEstateService.getRealEstateRequests(authHeader,realEstateId));
+    public ResponseEntity<PagingResponse> getRealEstateRequests(@RequestHeader("Authorization") String authHeader,
+                                                                @PathVariable(value = "id") long realEstateId,
+                                                                @RequestParam(defaultValue = "0") int page,
+                                                                @RequestParam(defaultValue = "5") int size) {
+        return ResponseEntity.ok(realEstateService.getRealEstateRequests(authHeader, realEstateId, page, size));
     }
 
+    @GetMapping(path = "filter")
+    public ResponseEntity<PagingResponse> filterRealEstate(@RequestHeader("Authorization") String authHeader,
+                                                           @RequestBody SearchRequest searchRequest,
+                                                           @RequestParam(defaultValue = "0") int page,
+                                                           @RequestParam(defaultValue = "5") int size
+    ) {
+        return ResponseEntity.ok(realEstateService.getFilteredRealEstate(authHeader, searchRequest, page, size));
+    }
 }

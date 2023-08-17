@@ -1,5 +1,6 @@
 package com.example.smsrly.entity;
 
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,22 +9,22 @@ import lombok.*;
 @Getter
 @Setter
 @NoArgsConstructor
-public class Save {
+public class RealEstateImage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
-
+    @Column(nullable = false, unique = true)
+    private String filename;
+    @Column(columnDefinition = "LONGTEXT", name = "image_url")
+    String imageURL;
     @ManyToOne
     @JoinColumn(name = "real_estate_id")
     private RealEstate realEstate;
 
-    public Save(User user, RealEstate realEstate) {
-        this.user = user;
+    public RealEstateImage(String filename, String imageURL, RealEstate realEstate) {
+        this.filename = filename;
+        this.imageURL = imageURL;
         this.realEstate = realEstate;
     }
 }

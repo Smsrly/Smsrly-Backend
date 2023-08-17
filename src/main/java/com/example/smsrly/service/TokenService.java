@@ -52,7 +52,7 @@ public class TokenService {
     }
 
     private void expireAllAccessTokens(User user) {
-        List<Token> userValidToken = tokenRepository.getAllValidTokens(user.getId());
+        List<Token> userValidToken = tokenRepository.findAllValidTokens(user.getId());
         if (userValidToken.isEmpty()) return;
         userValidToken.forEach(token -> token.setExpired(true));
     }
@@ -63,7 +63,7 @@ public class TokenService {
 
     @Scheduled(fixedRate = ONE_DAY_IN_MILLISECONDS)
     private void deleteExpiredToken() {
-        List<Token> expiredTokens = tokenRepository.getAllExpiredTokenByTime(LocalDateTime.now());
+        List<Token> expiredTokens = tokenRepository.findAllExpiredTokenByTime(LocalDateTime.now());
         expiredTokens.forEach(tokenRepository::delete);
     }
 }

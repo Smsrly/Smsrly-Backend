@@ -26,6 +26,9 @@ public class RequestsService {
 
     public Response setUserRequest(long realEstateId, String authHeader) {
         User user = userService.getUser(authHeader);
+        if (user.getPhoneNumber() == null) {
+            throw new InputException(util.getMessage("account.phone-number.not-exists"));
+        }
         RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() -> new InputException("realEstate with id " + realEstateId + " not exists"));
         int numOfRequestsPerOneHour = requestRepository.findRequestedRealEstateByUserId(
                 user.getId(),
@@ -37,7 +40,7 @@ public class RequestsService {
             throw new InputException(util.getMessage("owner.action.denied"));
         }
 
-        if (requestRepository.findRequest(realEstateId, user.getId()).isPresent()) {
+        if (requestRepository.findRequestByRealEstateAndUser(realEstate, user).isPresent()) {
             throw new InputException(util.getMessage("real.estate.request.exist"));
         }
 
@@ -58,11 +61,11 @@ public class RequestsService {
     public Response deleteUserRequest(String authHeader, long realEstateId) {
         User user = userService.getUser(authHeader);
 
-        realEstateRepository.findById(realEstateId).orElseThrow(() ->
+        RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() ->
                 new InputException("realEstate with id " + realEstateId + " not exists")
         );
 
-        Request request = requestRepository.findRequest(realEstateId, user.getId())
+        Request request = requestRepository.findRequestByRealEstateAndUser(realEstate, user)
                 .orElseThrow(() -> new InputException(util.getMessage("real.estate.request.not.exist")));
 
         requestRepository.delete(request);

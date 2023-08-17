@@ -2,21 +2,29 @@ package com.example.smsrly.service;
 
 import com.example.smsrly.auth.RegistrationRequest;
 import com.example.smsrly.dto.*;
+import com.example.smsrly.entity.RealEstate;
+import com.example.smsrly.entity.Request;
+import com.example.smsrly.entity.Save;
 import com.example.smsrly.entity.User;
 import com.example.smsrly.exception.InputException;
+import com.example.smsrly.repository.RealEstateRepository;
+import com.example.smsrly.repository.RequestRepository;
 import com.example.smsrly.repository.SaveRepository;
 import com.example.smsrly.repository.UserRepository;
+import com.example.smsrly.utilities.PagingResponse;
 import com.example.smsrly.utilities.Response;
 import com.example.smsrly.utilities.Util;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 
 @Service
@@ -29,6 +37,8 @@ public class UserService {
     private final JwtService jwtService;
     private final UserDTOMapper userDTOMapper;
     private final UserRealEstateDTOMapper userRealEstateDTOMapper;
+    private final RealEstateRepository realEstateRepository;
+    private final RequestRepository requestRepository;
     private final RequestDTOMapper requestDTOMapper;
     private final SaveDTOMapper saveDTOMapper;
     private final Util util;
@@ -46,9 +56,10 @@ public class UserService {
         return jwtService.extractEmail(token);
     }
 
-    public UserDTO getUserInfo(String authHeader) {
+    public UserDTO getUserInfo(String authHeader, int page, int size) {
         String email = extractUserEmail(authHeader);
-
+        Pageable pageable = PageRequest.of(page, size);
+        userDTOMapper.setPageable(pageable);
         return userRepository.findUserByEmail(email)
                 .map(userDTOMapper)
                 .orElseThrow(() -> new InputException(util.getMessage("token.user.not.exists")));
@@ -70,16 +81,12 @@ public class UserService {
 
         User user = getUser(authHeader);
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new InputException(util.getMessage("account.password.not.matched"));
-        }
-
         if (!Objects.equals(request.getEmail(), user.getEmail())) {
             throw new InputException(util.getMessage("account.changing.email.error"));
         }
 
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
+        user.setFirstname(request.getFirstname());
+        user.setLastname(request.getLastname());
         user.setPhoneNumber(request.getPhoneNumber());
         user.setLongitude(request.getLongitude());
         user.setLatitude(request.getLatitude());
@@ -87,29 +94,37 @@ public class UserService {
     }
 
 
-    public List<UserRealEstateDTO> getUserUploads(String authHeader) {
+    public PagingResponse getUserUploads(String authHeader, int page, int size) {
         User user = getUser(authHeader);
-        return user.getUploads().stream()
+        Pageable pageable = PageRequest.of(page, size);
+        Slice<RealEstate> uploads = realEstateRepository.findUserUploads(user.getId(), pageable);
+        List<UserRealEstateDTO> userUploads = uploads.stream()
                 .map(userRealEstateDTOMapper)
-                .collect(Collectors.toList());
+                .toList();
+        return util.pagingResponse(uploads, userUploads);
     }
 
 
-    public List<RealEstateDTO> getUserRequests(String authHeader) {
+    public PagingResponse getUserRequests(String authHeader, int page, int size) {
         User user = getUser(authHeader);
         Set<Long> savedRealEstatesIds = saveRepository.findSavesByUserId(user.getId());
         requestDTOMapper.setSavedRealEstatesIds(savedRealEstatesIds);
-
-        return user.getUserRequests().stream()
+        Pageable pageable = PageRequest.of(page, size);
+        Slice<Request> requests = requestRepository.findRequestsByUserId(user.getId(), pageable);
+        List<RealEstateDTO> userRequests = requests.stream()
                 .map(requestDTOMapper)
-                .collect(Collectors.toList());
+                .toList();
+        return util.pagingResponse(requests, userRequests);
     }
 
-    public List<RealEstateDTO> getUserSaves(String authHeader) {
+    public PagingResponse getUserSaves(String authHeader, int page, int size) {
         User user = getUser(authHeader);
-        return user.getSave().stream()
+        Pageable pageable = PageRequest.of(page, size);
+        Slice<Save> saves = saveRepository.findSavesByUserId(user.getId(), pageable);
+        List<RealEstateDTO> userSaves = saves.stream()
                 .map(saveDTOMapper)
-                .collect(Collectors.toList());
+                .toList();
+        return util.pagingResponse(saves, userSaves);
     }
 
 }

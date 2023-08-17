@@ -16,11 +16,9 @@ import lombok.NoArgsConstructor;
 public class AuthorizationRequest {
 
     @NotBlank(message = "first name must be not blank")
-    @JsonProperty("first_name")
-    private String firstName;
+    private String firstname;
     @NotBlank(message = "last name must be not blank")
-    @JsonProperty("last_name")
-    private String lastName;
+    private String lastname;
     @NotBlank(message = "email must be not blank")
     @Email(message = "email is not valid")
     private String email;

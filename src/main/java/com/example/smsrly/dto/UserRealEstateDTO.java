@@ -4,7 +4,6 @@ package com.example.smsrly.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
-import java.util.Set;
 
 public record UserRealEstateDTO(
         Long id,
@@ -26,6 +25,6 @@ public record UserRealEstateDTO(
         Boolean isSale,
         @JsonProperty("images")
         List<String> realEstateImages,
-        Set<UserRequestDTO> requests
+        List<UserRequestDTO> requests
 ) {
 }

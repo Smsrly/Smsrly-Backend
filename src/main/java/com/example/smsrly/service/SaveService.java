@@ -35,7 +35,7 @@ public class SaveService {
         }
 
 
-        if (saveRepository.findSave(realEstateId, user.getId()).isPresent()) {
+        if (saveRepository.findSaveByRealEstateAndUser(realEstate, user).isPresent()) {
             throw new InputException(util.getMessage("real.estate.save.exist"));
         }
 
@@ -50,11 +50,11 @@ public class SaveService {
 
         User user = userService.getUser(authHeader);
 
-        realEstateRepository.findById(realEstateId).orElseThrow(() ->
+        RealEstate realEstate = realEstateRepository.findById(realEstateId).orElseThrow(() ->
                 new InputException("realEstate with id " + realEstateId + " not exists")
         );
 
-        Save save = saveRepository.findSave(realEstateId, user.getId()).orElseThrow(() ->
+        Save save = saveRepository.findSaveByRealEstateAndUser(realEstate, user).orElseThrow(() ->
                 new InputException(util.getMessage("real.estate.save.not.exist"))
         );
 

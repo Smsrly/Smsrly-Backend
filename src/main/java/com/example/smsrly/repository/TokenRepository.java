@@ -13,11 +13,11 @@ import java.util.Optional;
 public interface TokenRepository extends JpaRepository<Token, Integer> {
 
     @Query(value = "SELECT * FROM token where user_id= :userId and is_expired = 0", nativeQuery = true)
-    List<Token> getAllValidTokens(long userId);
+    List<Token> findAllValidTokens(long userId);
 
-    @Query(value = "SELECT * FROM token where token = :token", nativeQuery = true)
+//    @Query(value = "SELECT * FROM token where token = :token", nativeQuery = true)
     Optional<Token> findByToken(String token);
 
     @Query(value = "SELECT * FROM token where expire_date <= :now", nativeQuery = true)
-    List<Token> getAllExpiredTokenByTime(LocalDateTime now);
+    List<Token> findAllExpiredTokenByTime(LocalDateTime now);
 }

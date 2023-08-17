@@ -12,10 +12,10 @@ import java.util.Set;
 @Table
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties({"hibernateLazyInitializer"})
-@Builder
 public class RealEstate {
 
     @Id
@@ -43,10 +43,10 @@ public class RealEstate {
     private String city;
     @Column(nullable = false)
     private String country;
-    @Column(nullable = false)
+    @Column(nullable = false,name = "is_sale")
     private Boolean isSale;
     @OneToMany(mappedBy = "realEstate", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<RealEstateImages> realEstateImages;
+    private List<RealEstateImage> realEstateImages;
 
     @Column(name = "date_uploaded", columnDefinition = "DATETIME", nullable = false)
 //    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

@@ -69,8 +69,8 @@ public class AuthenticationController {
         authenticationService.refreshToken(request, response);
     }
 
-    @GetMapping(path = "/image/{fileName}")
-    public ResponseEntity<?> download(@PathVariable("fileName") String fileName) throws IOException {
+    @GetMapping(path = "/image/{filename}")
+    public ResponseEntity<?> download(@PathVariable("filename") String fileName) throws IOException {
         byte[] imageData = storageService.downloadImage(fileName);
         return ResponseEntity.status(HttpStatus.OK)
                 .contentType(MediaType.valueOf("image/png"))

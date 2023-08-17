@@ -1,11 +1,10 @@
 package com.example.smsrly.dto;
 
-import com.example.smsrly.entity.RealEstateImages;
+import com.example.smsrly.entity.RealEstateImage;
 import com.example.smsrly.entity.Save;
 import org.springframework.stereotype.Service;
 
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 public class SaveDTOMapper implements Function<Save, RealEstateDTO> {
@@ -26,8 +25,8 @@ public class SaveDTOMapper implements Function<Save, RealEstateDTO> {
                 save.getRealEstate().getCountry(),
                 save.getRealEstate().getIsSale(),
                 save.getRealEstate().getRealEstateImages().stream()
-                        .map(RealEstateImages::getRealEstateImageURL)
-                        .collect(Collectors.toList()),
+                        .map(RealEstateImage::getImageURL)
+                        .toList(),
                 true
         );
     }

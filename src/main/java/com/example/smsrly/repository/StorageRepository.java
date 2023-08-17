@@ -9,9 +9,9 @@ import java.util.Optional;
 
 @Repository
 public interface StorageRepository extends JpaRepository<Storage, Long> {
-    @Query(value = "SELECT * FROM storage WHERE name = :fileName", nativeQuery = true)
-    Optional<Storage> findImageByName(String fileName);
+    //    @Query(value = "SELECT * FROM storage WHERE filename = :filename", nativeQuery = true)
+    Optional<Storage> findImageByFilename(String filename);
 
-    @Query(value = "SELECT path FROM storage WHERE name = :fileName", nativeQuery = true)
-    String findImagePathByImageName(String fileName);
+    @Query(value = "SELECT filepath FROM storage WHERE filename = :filename", nativeQuery = true)
+    String findFilepathByFileName(String filename);
 }

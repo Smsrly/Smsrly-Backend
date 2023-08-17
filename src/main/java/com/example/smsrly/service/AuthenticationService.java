@@ -51,13 +51,17 @@ public class AuthenticationService {
             throw new InputException(util.getMessage("account.exists"));
         }
 
+        if (!util.isValidPassword(request.getPassword())) {
+            throw new InputException(util.getMessage("account.password.not-matches-with-pattern"));
+        }
+
         if (!otpService.isValidateOTP(OTPKey, otp)) {
             throw new InputException(util.getMessage("otp.invalid"));
         }
 
         User user = User.builder()
-                .firstName(request.getFirstName().replaceAll("\\s", ""))
-                .lastName(request.getLastName().replaceAll("\\s", ""))
+                .firstname(request.getFirstname().replaceAll("\\s", ""))
+                .lastname(request.getLastname().replaceAll("\\s", ""))
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .phoneNumber(request.getPhoneNumber())
@@ -91,8 +95,8 @@ public class AuthenticationService {
             }
 
             User user = User.builder()
-                    .firstName(request.getFirstName())
-                    .lastName(request.getLastName())
+                    .firstname(request.getFirstname())
+                    .lastname(request.getLastname())
                     .email(request.getEmail())
                     .imageURL(request.getImageURL())
                     .longitude(null)
@@ -111,8 +115,8 @@ public class AuthenticationService {
                 .message(
                         sendOTP(
                                 OTPRequest.builder()
-                                        .firstName(user.getFirstName())
-                                        .lastName(user.getLastName())
+                                        .firstName(user.getFirstname())
+                                        .lastName(user.getLastname())
                                         .email(user.getEmail())
                                         .build(),
                                 RESET_PASSWORD
